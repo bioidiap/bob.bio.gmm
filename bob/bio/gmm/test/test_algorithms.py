@@ -266,7 +266,7 @@ def test_jfa():
       INIT_SEED = seed_value
   )
 
-  train_data = utils.random_training_set((100,45), count=100, minimum=-5., maximum=5., seed=42)
+  train_data = utils.random_training_set((100,45), count=5, minimum=-5., maximum=5.)
   # reference is the same as for GMM projection
   reference_file = pkg_resources.resource_filename('bob.bio.gmm.test', 'data/gmm_projector.hdf5')
   try:
@@ -320,7 +320,7 @@ def test_jfa():
 
   # compare model with probe
   probe = jfa1.read_probe(pkg_resources.resource_filename('bob.bio.gmm.test', 'data/gmm_projected.hdf5'))
-  reference_score = 0.04371977
+  reference_score = 0.01763115
   assert abs(jfa1.score(model, probe) - reference_score) < 1e-5, "The scores differ: %3.8f, %3.8f" % (jfa1.score(model, probe), reference_score)
   # TODO: implement that
   # assert abs(jfa1.score_for_multiple_probes(model, [probe, probe]) - reference_score) < 1e-5, jfa1.score_for_multiple_probes(model, [probe, probe])
