@@ -132,7 +132,8 @@ class GMM (Algorithm):
     """Save projector to file"""
     # Saves the UBM to file
     logger.debug(" .... Saving model to file '%s'", projector_file)
-    self.ubm.save(bob.io.base.HDF5File(projector_file, "w"))
+    hdf5 = projector_file if isinstance(projector_file, bob.io.base.HDF5File) else bob.io.base.HDF5File(projector_file, 'w')
+    self.ubm.save(hdf5)
 
 
   def train_projector(self, train_features, projector_file):

@@ -326,80 +326,63 @@ def test_jfa():
   # assert abs(jfa1.score_for_multiple_probes(model, [probe, probe]) - reference_score) < 1e-5, jfa1.score_for_multiple_probes(model, [probe, probe])
 
 
-"""
-  def test10_ivector(self):
-    # NOTE: This test will fail when it is run solely. Please always run all Tool tests in order to assure that they work.
-    # read input
-    feature = facereclib.utils.load(self.input_dir('dct_blocks.hdf5'))
-    # assure that the config file is readable
-    tool = self.config('ivector')
-    self.assertTrue(isinstance(tool, facereclib.tools.IVector))
 
-    # here, we use a reduced complexity for test purposes
-    tool = facereclib.tools.IVector(
-        number_of_gaussians = 2,
-        subspace_dimension_of_t=2,       # T subspace dimension
-        update_sigma = False, # TODO Do another test with True
-        tv_training_iterations = 1,  # Number of EM iterations for the JFA training
-        variance_threshold = 1e-5,
-        INIT_SEED = seed_value
-    )
-    self.assertTrue(tool.performs_projection)
-    self.assertTrue(tool.requires_projector_training)
-    self.assertTrue(tool.use_projected_features_for_enrollment)
-    self.assertFalse(tool.split_training_features_by_client)
-    self.assertFalse(tool.requires_enroller_training)
+def test_ivector():
+  temp_file = bob.io.base.test_utils.temporary_filename()
+  ivec1 = bob.bio.base.load_resource("ivector", "algorithm")
+  assert isinstance(ivec1, bob.bio.gmm.algorithm.IVector)
+  assert isinstance(ivec1, bob.bio.gmm.algorithm.GMM)
+  assert isinstance(ivec1, bob.bio.base.algorithm.Algorithm)
+  assert ivec1.performs_projection
+  assert ivec1.requires_projector_training
+  assert ivec1.use_projected_features_for_enrollment
+  assert not ivec1.split_training_features_by_client
+  assert not ivec1.requires_enroller_training
 
+  # create smaller IVector object
+  ivec2 = bob.bio.gmm.algorithm.IVector(
+      number_of_gaussians = 2,
+      subspace_dimension_of_t = 2,
+      kmeans_training_iterations = 1,
+      tv_training_iterations = 1,
+      INIT_SEED = seed_value
+  )
+
+  train_data = utils.random_training_set((100,45), count=5, minimum=-5., maximum=5.)
+  # reference is the same as for GMM projection
+  reference_file = pkg_resources.resource_filename('bob.bio.gmm.test', 'data/ivector_projector.hdf5')
+  try:
     # train the projector
-    t = tempfile.mkstemp('ubm.hdf5', prefix='frltest_')[1]
-    tool.train_projector(facereclib.utils.tests.random_training_set(feature.shape, count=5, minimum=-5., maximum=5.), t)
-    if regenerate_refs:
-      import shutil
-      shutil.copy2(t, self.reference_dir('ivector_projector.hdf5'))
+    ivec2.train_projector(train_data, temp_file)
 
-    # load the projector file
-    tool.load_projector(self.reference_dir('ivector_projector.hdf5'))
+    assert os.path.exists(temp_file)
 
-    # compare ISV projector with reference
-    hdf5file = bob.io.base.HDF5File(t)
-    hdf5file.cd('Projector')
-    projector_reference = bob.learn.em.GMMMachine(hdf5file)
-    self.assertTrue(tool.m_ubm.is_similar_to(projector_reference))
+    if regenerate_refs: shutil.copy(temp_file, reference_file)
 
-    # compare ISV enroller with reference
-    hdf5file.cd('/')
-    hdf5file.cd('Enroller')
-    enroller_reference = bob.learn.em.IVectorMachine(hdf5file)
-    enroller_reference.ubm = projector_reference
-    if not _mac_os:
-      self.assertTrue(tool.m_tv.is_similar_to(enroller_reference))
-    os.remove(t)
+    # check projection matrix
+    ivec1.load_projector(reference_file)
+    ivec2.load_projector(temp_file)
 
-    # project the feature
-    projected = tool.project(feature)
-    if regenerate_refs:
-      tool.save_feature(projected, self.reference_dir('ivector_feature.hdf5'))
+    assert ivec1.ubm.is_similar_to(ivec2.ubm)
+    assert ivec1.tv.is_similar_to(ivec2.tv)
+    assert ivec1.whitener.is_similar_to(ivec2.whitener)
+  finally:
+    if os.path.exists(temp_file): os.remove(temp_file)
 
-    # compare the projected feature with the reference
-    projected_reference = tool.read_feature(self.reference_dir('ivector_feature.hdf5'))
-    self.assertTrue(numpy.allclose(projected,projected_reference))
+  # generate and project random feature
+  feature = utils.random_array((20,45), -5., 5., seed=84)
+  projected = ivec1.project(feature)
+  _compare(projected, pkg_resources.resource_filename('bob.bio.gmm.test', 'data/ivector_projected.hdf5'), ivec1.write_feature, ivec1.read_feature)
 
-    # enroll model with the projected feature
-    # This is not yet supported
-    # model = tool.enroll([projected[0]])
-    # if regenerate_refs:
-    #  model.save(bob.io.HDF5File(self.reference_dir('ivector_model.hdf5'), 'w'))
-    #reference_model = tool.read_model(self.reference_dir('ivector_model.hdf5'))
-    # compare the IVector model with the reference
-    #self.assertTrue(model.is_similar_to(reference_model))
+  # enroll model from random features
+  random_features = utils.random_training_set((20,45), count=5, minimum=-5., maximum=5.)
+  enroll_features = [ivec1.project(feature) for feature in random_features]
+  model = ivec1.enroll(enroll_features)
+  _compare(model, pkg_resources.resource_filename('bob.bio.gmm.test', 'data/ivector_model.hdf5'), ivec1.write_model, ivec1.read_model)
 
-    # check that the read_probe function reads the correct values
-    probe = tool.read_probe(self.reference_dir('ivector_feature.hdf5'))
-    self.assertTrue(numpy.allclose(probe,projected))
-
-    # score with projected feature and compare to the weird reference score ...
-    # This in not implemented yet
-
-    # score with a concatenation of the probe
-    # This is not implemented yet
-"""
+  # compare model with probe
+  probe = ivec1.read_probe(pkg_resources.resource_filename('bob.bio.gmm.test', 'data/ivector_projected.hdf5'))
+  reference_score = -0.00187151
+  assert abs(ivec1.score(model, probe) - reference_score) < 1e-5, "The scores differ: %3.8f, %3.8f" % (ivec1.score(model, probe), reference_score)
+  # TODO: implement that
+  assert abs(ivec1.score_for_multiple_probes(model, [probe, probe]) - reference_score) < 1e-5

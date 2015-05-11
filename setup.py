@@ -121,6 +121,7 @@ setup(
         'gmm-regular       = bob.bio.gmm.config.algorithm.gmm_regular:algorithm',
         'jfa               = bob.bio.gmm.config.algorithm.jfa:algorithm',
         'isv               = bob.bio.gmm.config.algorithm.isv:algorithm',
+        'ivector           = bob.bio.gmm.config.algorithm.ivector:algorithm',
       ],
    },
 
