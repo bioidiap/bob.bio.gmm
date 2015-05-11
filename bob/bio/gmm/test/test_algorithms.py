@@ -81,7 +81,7 @@ def test_gmm():
   # create smaller GMM object
   gmm2 = bob.bio.gmm.algorithm.GMM(
     number_of_gaussians = 2,
-    k_means_training_iterations = 1,
+    kmeans_training_iterations = 1,
     gmm_training_iterations = 1,
     INIT_SEED = seed_value,
   )
@@ -138,7 +138,7 @@ def test_gmm_regular():
   # create smaller GMM object
   gmm2 = bob.bio.gmm.algorithm.GMMRegular(
     number_of_gaussians = 2,
-    k_means_training_iterations = 1,
+    kmeans_training_iterations = 1,
     gmm_training_iterations = 1,
     INIT_SEED = seed_value,
   )
@@ -193,7 +193,7 @@ def test_isv():
   isv2 = bob.bio.gmm.algorithm.ISV(
       number_of_gaussians = 2,
       subspace_dimension_of_u = 10,
-      k_means_training_iterations = 1,
+      kmeans_training_iterations = 1,
       gmm_training_iterations = 1,
       isv_training_iterations = 1,
       INIT_SEED = seed_value
@@ -260,7 +260,7 @@ def test_jfa():
       number_of_gaussians = 2,
       subspace_dimension_of_u = 2,
       subspace_dimension_of_v = 2,
-      k_means_training_iterations = 1,
+      kmeans_training_iterations = 1,
       gmm_training_iterations = 1,
       jfa_training_iterations = 1,
       INIT_SEED = seed_value

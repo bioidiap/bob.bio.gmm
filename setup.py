@@ -102,6 +102,7 @@ setup(
 
       # scripts should be declared using this entry:
       'console_scripts' : [
+        'verify_gmm.py      = bob.bio.gmm.script.verify_gmm:main',
       ],
 
       'bob.bio.database': [
@@ -111,6 +112,7 @@ setup(
       ],
 
       'bob.bio.extractor': [
+        'dummy             = bob.bio.gmm.test.dummy.extractor:extractor', # for test purposes only
       ],
 
       'bob.bio.algorithm': [
