@@ -20,7 +20,7 @@ def parse_arguments(command_line_parameters, exclude_resources_from = []):
   parsers = base_tools.command_line_parser(exclude_resources_from = exclude_resources_from)
 
   # add GMM-related options
-  tools.add_parallel_gmm_options(parsers)
+  tools.add_parallel_gmm_options(parsers, sub_module = 'isv')
 
   # override some parameters
   parsers['config'].add_argument('-g', '--grid', metavar = 'x', nargs = '+', required=True,
@@ -33,7 +33,7 @@ def parse_arguments(command_line_parameters, exclude_resources_from = []):
   # Add sub-tasks that can be executed by this script
   parser = parsers['main']
   parser.add_argument('--sub-task',
-      choices = ('preprocess', 'train-extractor', 'extract', 'normalize-features', 'kmeans-init', 'kmeans-e-step', 'kmeans-m-step', 'gmm-init', 'gmm-e-step', 'gmm-m-step', 'project', 'enroll', 'compute-scores', 'concatenate'),
+      choices = ('preprocess', 'train-extractor', 'extract', 'normalize-features', 'kmeans-init', 'kmeans-e-step', 'kmeans-m-step', 'gmm-init', 'gmm-e-step', 'gmm-m-step', 'gmm-project', 'isv-train', 'project', 'enroll', 'compute-scores', 'concatenate'),
       help = argparse.SUPPRESS) #'Executes a subtask (FOR INTERNAL USE ONLY!!!)'
   parser.add_argument('--iteration', type = int,
       help = argparse.SUPPRESS) #'Which type of models to generate (Normal or TModels)'
@@ -46,87 +46,50 @@ def parse_arguments(command_line_parameters, exclude_resources_from = []):
 
   # now that we have set up everything, get the command line arguments
   args = base_tools.initialize(parsers, command_line_parameters,
-      skips = ['preprocessing', 'extractor-training', 'extraction', 'normalization', 'kmeans', 'gmm', 'projection', 'enroller-training', 'enrollment', 'score-computation', 'concatenation', 'calibration']
+      skips = ['preprocessing', 'extractor-training', 'extraction', 'normalization', 'kmeans', 'gmm', 'isv', 'projection', 'enroller-training', 'enrollment', 'score-computation', 'concatenation', 'calibration']
   )
 
   args.skip_projector_training = True
 
   # and add the GMM-related parameters
-  tools.initialize_parallel_gmm(args)
+  tools.initialize_parallel_gmm(args, sub_module = 'isv')
 
   # assert that the algorithm is a GMM
-  if args.algorithm.__class__ not in (algorithm.GMM, algorithm.GMMRegular):
-    raise ValueError("The given algorithm %s is not a (pure) GMM algorithm" % type(args.algorithm))
+  if args.algorithm.__class__ != algorithm.ISV:
+    raise ValueError("The given algorithm %s is not a (pure) ISV algorithm" % type(args.algorithm))
 
   return args
 
-def add_gmm_jobs(args, job_ids, deps, submitter):
+from .verify_gmm import add_gmm_jobs
+
+def add_isv_jobs(args, job_ids, deps, submitter):
   """Adds all GMM-related jobs."""
 
-  # KMeans
-  if not args.skip_kmeans:
-    # initialization
-    if not args.kmeans_start_iteration:
-      job_ids['kmeans-init'] = submitter.submit(
-              '--sub-task kmeans-init',
-              name = 'k-init',
-              dependencies = deps,
-              **args.grid.training_queue)
-      deps.append(job_ids['kmeans-init'])
+  # first, add gmm jobs
+  job_ids, deps = add_gmm_jobs(args, job_ids, deps, submitter)
 
-    # several iterations of E and M steps
-    for iteration in range(args.kmeans_start_iteration, args.algorithm.kmeans_training_iterations):
-      # E-step
-      job_ids['kmeans-e-step'] = submitter.submit(
-              '--sub-task kmeans-e-step --iteration %d' % iteration,
-              name='k-e-%d' % iteration,
-              number_of_parallel_jobs = args.grid.number_of_projection_jobs,
-              dependencies = [job_ids['kmeans-m-step']] if iteration != args.kmeans_start_iteration else deps,
-              **args.grid.projection_queue)
+  # now, add two extra steps for ISV
+  if not args.skip_isv:
+    # gmm projection
+    job_ids['gmm-projection'] = submitter.submit(
+            '--sub-task gmm-project',
+            name = 'pro-gmm',
+            number_of_parallel_jobs = args.grid.number_of_projection_jobs,
+            dependencies = deps,
+            **args.grid.projection_queue)
+    deps.append(job_ids['gmm-projection'])
 
-      # M-step
-      job_ids['kmeans-m-step'] = submitter.submit(
-              '--sub-task kmeans-m-step --iteration %d' % iteration,
-              name='k-m-%d' % iteration,
-              dependencies = [job_ids['kmeans-e-step']],
-              **args.grid.training_queue)
+    job_ids['isv-training'] = submitter.submit(
+            '--sub-task isv-train',
+            name = 'train-isv',
+            dependencies = deps,
+            **args.grid.training_queue)
+    deps.append(job_ids['isv-training'])
 
-    # add dependence to the last m step
-    deps.append(job_ids['kmeans-m-step'])
-
-  # GMM
-  if not args.skip_gmm:
-    # initialization
-    if not args.gmm_start_iteration:
-      job_ids['gmm-init'] = submitter.submit(
-              '--sub-task gmm-init',
-              name = 'g-init',
-              dependencies = deps,
-              **args.grid.training_queue)
-      deps.append(job_ids['gmm-init'])
-
-    # several iterations of E and M steps
-    for iteration in range(args.gmm_start_iteration, args.algorithm.gmm_training_iterations):
-      # E-step
-      job_ids['gmm-e-step'] = submitter.submit(
-              '--sub-task gmm-e-step --iteration %d' % iteration,
-              name='g-e-%d' % iteration,
-              number_of_parallel_jobs = args.grid.number_of_projection_jobs,
-              dependencies = [job_ids['gmm-m-step']] if iteration != args.gmm_start_iteration else deps,
-              **args.grid.projection_queue)
-
-      # M-step
-      job_ids['gmm-m-step'] = submitter.submit(
-              '--sub-task gmm-m-step --iteration %d' % iteration,
-              name='g-m-%d' % iteration,
-              dependencies = [job_ids['gmm-e-step']],
-              **args.grid.training_queue)
-
-    # add dependence to the last m step
-    deps.append(job_ids['gmm-m-step'])
   return job_ids, deps
 
 
+from .verify_gmm import execute as gmm_execute
 
 
 def execute(args):
@@ -134,7 +97,7 @@ def execute(args):
   This job might be executed either in the grid, or locally."""
 
   # first, let the base script decide if it knows how to execute the job
-  if bob.bio.base.script.verify.execute(args):
+  if gmm_execute(args):
     return True
 
   # now, check what we can do
@@ -142,56 +105,19 @@ def execute(args):
   # the file selector object
   fs = tools.FileSelector.instance()
 
-  # train the feature projector
-  if args.sub_task == 'kmeans-init':
-    tools.kmeans_initialize(
+  if args.sub_task == 'gmm-project':
+    tools.gmm_project(
         args.algorithm,
         args.extractor,
-        args.limit_training_data,
-        force = args.force)
-
-  # train the feature projector
-  elif args.sub_task == 'kmeans-e-step':
-    tools.kmeans_estep(
-        args.algorithm,
-        args.extractor,
-        args.iteration,
         indices = base_tools.indices(fs.training_list('extracted', 'train_projector'), args.grid.number_of_projection_jobs),
         force = args.force)
 
   # train the feature projector
-  elif args.sub_task == 'kmeans-m-step':
-    tools.kmeans_mstep(
+  elif args.sub_task == 'isv-train':
+    tools.isv_training(
         args.algorithm,
-        args.iteration,
-        number_of_parallel_jobs = args.grid.number_of_projection_jobs,
-        clean = args.clean_intermediate,
         force = args.force)
 
-  elif args.sub_task == 'gmm-init':
-    tools.gmm_initialize(
-        args.algorithm,
-        args.extractor,
-        args.limit_training_data,
-        force = args.force)
-
-  # train the feature projector
-  elif args.sub_task == 'gmm-e-step':
-    tools.gmm_estep(
-        args.algorithm,
-        args.extractor,
-        args.iteration,
-        indices = base_tools.indices(fs.training_list('extracted', 'train_projector'), args.grid.number_of_projection_jobs),
-        force = args.force)
-
-  # train the feature projector
-  elif args.sub_task == 'gmm-m-step':
-    tools.gmm_mstep(
-        args.algorithm,
-        args.iteration,
-        number_of_parallel_jobs = args.grid.number_of_projection_jobs,
-        clean = args.clean_intermediate,
-        force = args.force)
   else:
     # Not our keyword...
     return False
@@ -220,8 +146,8 @@ def verify(args, command_line_parameters, external_fake_job_id = 0):
     return {}
   else:
     # add jobs
-    submitter = base_tools.GridSubmission(args, command_line_parameters, executable = 'verify_gmm.py', first_fake_job_id = 0) if args.grid else None
-    retval = tools.add_jobs(args, submitter, local_job_adder = add_gmm_jobs)
+    submitter = base_tools.GridSubmission(args, command_line_parameters, executable = 'verify_isv.py', first_fake_job_id = 0) if args.grid else None
+    retval = tools.add_jobs(args, submitter, local_job_adder = add_isv_jobs)
     base_tools.write_info(args, command_line_parameters)
 
     if args.grid.is_local() and args.run_local_scheduler:

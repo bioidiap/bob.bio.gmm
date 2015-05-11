@@ -98,7 +98,7 @@ class GMM (Algorithm):
   #######################################################
   ################ UBM training #########################
 
-  def _train_projector_using_array(self, array):
+  def train_ubm(self, array):
 
     logger.debug(" .... Training with %d feature vectors", array.shape[0])
 
@@ -112,7 +112,7 @@ class GMM (Algorithm):
 
     # Trains using the KMeansTrainer
     logger.info("  -> Training K-Means")
-    bob.learn.em.train(self.kmeans_trainer, kmeans, array, self.kmeans_training_iterations, self.training_threshold, bob.core.random.mt19937(self.init_seed))
+    bob.learn.em.train(self.kmeans_trainer, kmeans, array, self.kmeans_training_iterations, self.training_threshold, self.rng)
 
     variances, weights = kmeans.get_variances_and_weights_for_each_cluster(array)
     means = kmeans.means
@@ -125,10 +125,10 @@ class GMM (Algorithm):
 
     # Trains the GMM
     logger.info("  -> Training GMM")
-    bob.learn.em.train(self.ubm_trainer, self.ubm, array, self.gmm_training_iterations, self.training_threshold, bob.core.random.mt19937(self.init_seed))
+    bob.learn.em.train(self.ubm_trainer, self.ubm, array, self.gmm_training_iterations, self.training_threshold, self.rng)
 
 
-  def _save_projector(self, projector_file):
+  def save_ubm(self, projector_file):
     """Save projector to file"""
     # Saves the UBM to file
     logger.debug(" .... Saving model to file '%s'", projector_file)
@@ -144,9 +144,9 @@ class GMM (Algorithm):
     # Loads the data into an array
     array = numpy.vstack(train_features)
 
-    self._train_projector_using_array(array)
+    self.train_ubm(array)
 
-    self._save_projector(projector_file)
+    self.save_ubm(projector_file)
 
 
   #######################################################
@@ -169,7 +169,7 @@ class GMM (Algorithm):
     self.rng = bob.core.random.mt19937(self.init_seed)
 
 
-  def _project_using_array(self, array):
+  def project_ubm(self, array):
     logger.debug(" .... Projecting %d feature vectors" % array.shape[0])
     # Accumulates statistics
     gmm_stats = bob.learn.em.GMMStats(self.ubm.shape[0], self.ubm.shape[1])
@@ -182,7 +182,7 @@ class GMM (Algorithm):
   def project(self, feature):
     """Computes GMM statistics against a UBM, given an input 2D numpy.ndarray of feature vectors"""
     self._check_feature(feature)
-    return self._project_using_array(feature)
+    return self.project_ubm(feature)
 
 
   def read_gmm_stats(self, gmm_stats_file):
@@ -193,7 +193,7 @@ class GMM (Algorithm):
     """Read the type of features that we require, namely GMM_Stats"""
     return self.read_gmm_stats(feature_file)
 
-  def _enroll_using_array(self, array):
+  def enroll_gmm(self, array):
     logger.debug(" .... Enrolling with %d feature vectors", array.shape[0])
 
     gmm = bob.learn.em.GMMMachine(self.ubm)
@@ -206,7 +206,7 @@ class GMM (Algorithm):
     [self._check_feature(feature) for feature in feature_arrays]
     array = numpy.vstack(feature_arrays)
     # Use the array to train a GMM and return it
-    return self._enroll_using_array(array)
+    return self.enroll_gmm(array)
 
 
   ######################################################

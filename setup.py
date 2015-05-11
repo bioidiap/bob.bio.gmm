@@ -103,6 +103,7 @@ setup(
       # scripts should be declared using this entry:
       'console_scripts' : [
         'verify_gmm.py      = bob.bio.gmm.script.verify_gmm:main',
+        'verify_isv.py      = bob.bio.gmm.script.verify_isv:main',
       ],
 
       'bob.bio.database': [

@@ -1,5 +1,3 @@
-
-
 from __future__ import print_function
 
 import bob.measure
@@ -10,11 +8,9 @@ import shutil
 import tempfile
 import numpy
 
-import bob.io.base.test_utils
 import bob.io.image
 import bob.bio.base
 import bob.bio.gmm
-from . import utils
 
 from nose.plugins.skip import SkipTest
 
@@ -63,8 +59,8 @@ def _verify(parameters, test_dir, sub_dir, ref_modifier="", score_modifier=('sco
     shutil.rmtree(test_dir)
 
 
-def test_gmm_base():
-  test_dir = tempfile.mkdtemp(prefix='frltest_')
+def test_gmm_sequential():
+  test_dir = tempfile.mkdtemp(prefix='bobtest_')
   # define dummy parameters
   parameters = [
       '-d', 'dummy',
@@ -72,7 +68,7 @@ def test_gmm_base():
       '-e', 'dummy',
       '-a', 'bob.bio.gmm.algorithm.GMM(2, 2, 2)', '--import', 'bob.bio.gmm',
       '--zt-norm',
-      '-s', 'test_gmm_sequential', '-vv',
+      '-s', 'test_gmm_sequential',
       '--temp-directory', test_dir,
       '--result-directory', test_dir
   ]
@@ -84,7 +80,7 @@ def test_gmm_base():
 
 def test_gmm_parallel():
   from bob.bio.gmm.script.verify_gmm import main
-  test_dir = tempfile.mkdtemp(prefix='frltest_')
+  test_dir = tempfile.mkdtemp(prefix='bobtest_')
   test_database = os.path.join(test_dir, "submitted.sql3")
   # define dummy parameters
   parameters = [
@@ -95,7 +91,7 @@ def test_gmm_parallel():
       '-g', 'bob.bio.base.grid.Grid(grid = "local", number_of_parallel_processes = 2, scheduler_sleep_time = 0.1)', '-G', test_database, '--run-local-scheduler', '-R',
       '--clean-intermediate',
       '--zt-norm',
-      '-s', 'test_gmm_parallel', '-vv',
+      '-s', 'test_gmm_parallel',
       '--temp-directory', test_dir,
       '--result-directory', test_dir,
   ]
@@ -103,3 +99,45 @@ def test_gmm_parallel():
   print (bob.bio.base.tools.command_line(parameters))
 
   _verify(parameters, test_dir, 'test_gmm_parallel', executable=main, ref_modifier='-gmm')
+
+
+def test_isv_sequential():
+  test_dir = tempfile.mkdtemp(prefix='bobtest_')
+  # define dummy parameters
+  parameters = [
+      '-d', 'dummy',
+      '-p', 'dummy',
+      '-e', 'dummy',
+      '-a', 'bob.bio.gmm.algorithm.ISV(10, number_of_gaussians=2, kmeans_training_iterations=2, gmm_training_iterations=2, isv_training_iterations=2)', '--import', 'bob.bio.gmm',
+      '--zt-norm',
+      '-s', 'test_isv_sequential',
+      '--temp-directory', test_dir,
+      '--result-directory', test_dir
+  ]
+
+  print (bob.bio.base.tools.command_line(parameters))
+
+  _verify(parameters, test_dir, 'test_isv_sequential', ref_modifier='-isv')
+
+
+def test_isv_parallel():
+  from bob.bio.gmm.script.verify_isv import main
+  test_dir = tempfile.mkdtemp(prefix='bobtest_')
+  test_database = os.path.join(test_dir, "submitted.sql3")
+  # define dummy parameters
+  parameters = [
+      '-d', 'dummy',
+      '-p', 'dummy',
+      '-e', 'dummy',
+      '-a', 'bob.bio.gmm.algorithm.ISV(10, number_of_gaussians=2, kmeans_training_iterations=2, gmm_training_iterations=2, isv_training_iterations=2)', '--import', 'bob.bio.gmm', 'bob.io.image',
+      '-g', 'bob.bio.base.grid.Grid(grid = "local", number_of_parallel_processes = 2, scheduler_sleep_time = 0.1)', '-G', test_database, '--run-local-scheduler', '-R',
+      '--clean-intermediate',
+      '--zt-norm',
+      '-s', 'test_isv_parallel',
+      '--temp-directory', test_dir,
+      '--result-directory', test_dir,
+  ]
+
+  print (bob.bio.base.tools.command_line(parameters))
+
+  _verify(parameters, test_dir, 'test_isv_parallel', executable=main, ref_modifier='-isv')

@@ -269,8 +269,8 @@ def gmm_mstep(algorithm, iteration, number_of_parallel_jobs, force=False, clean=
     gmm_machine.save(bob.io.base.HDF5File(new_machine_file, 'w'))
 
   if iteration == algorithm.gmm_training_iterations-1:
-    shutil.copy(new_machine_file, fs.gmm_file)
-    logger.info("UBM training: Wrote new GMM machine '%s'", fs.gmm_file)
+    shutil.copy(new_machine_file, fs.ubm_file)
+    logger.info("UBM training: Wrote new GMM machine '%s'", fs.ubm_file)
 
   if clean and iteration > 0:
     old_dir = os.path.dirname(fs.gmm_intermediate_file(iteration-1))

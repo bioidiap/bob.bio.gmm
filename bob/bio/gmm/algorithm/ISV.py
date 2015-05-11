@@ -56,15 +56,15 @@ class ISV (GMM):
     self.subspace_dimension_of_u = subspace_dimension_of_u
     self.isv_training_iterations = isv_training_iterations
     self.isv_enroll_iterations = isv_enroll_iterations
-    self.trainer = bob.learn.em.ISVTrainer(self.relevance_factor)
+    self.isv_trainer = bob.learn.em.ISVTrainer(self.relevance_factor)
 
 
-  def _train_isv(self, data):
+  def train_isv(self, data):
     """Train the ISV model given a dataset"""
     logger.info("  -> Training ISV enroller")
     self.isvbase = bob.learn.em.ISVBase(self.ubm, self.subspace_dimension_of_u)
     # train ISV model
-    bob.learn.em.train(self.trainer, self.isvbase, data, self.isv_training_iterations, rng=self.rng)
+    bob.learn.em.train(self.isv_trainer, self.isvbase, data, self.isv_training_iterations, rng=self.rng)
 
 
   def train_projector(self, train_features, projector_file):
@@ -72,21 +72,16 @@ class ISV (GMM):
     [self._check_feature(feature) for client in train_features for feature in client]
 
     data1 = numpy.vstack([feature for client in train_features for feature in client])
-    GMM._train_projector_using_array(self, data1)
+    self.train_ubm(data1)
     # to save some memory, we might want to delete these data
     del data1
 
     # project training data
     logger.info("  -> Projecting training data")
-    data = []
-    for client_features in train_features:
-      list = []
-      for feature in client_features:
-        list.append(GMM.project(self, feature))
-      data.append(list)
+    data = [[self.project_ubm(feature) for feature in client] for client in train_features]
 
     # train ISV
-    self._train_isv(data)
+    self.train_isv(data)
 
     # Save the ISV base AND the UBM into the same file
     self.save_projector(projector_file)
@@ -164,7 +159,7 @@ class ISV (GMM):
     for feature in enroll_features:
       assert isinstance(feature, bob.learn.em.GMMStats)
     machine = bob.learn.em.ISVMachine(self.isvbase)
-    self.trainer.enroll(machine, enroll_features, self.isv_enroll_iterations)
+    self.isv_trainer.enroll(machine, enroll_features, self.isv_enroll_iterations)
     # return the resulting gmm
     return machine
 

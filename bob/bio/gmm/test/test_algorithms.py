@@ -118,7 +118,7 @@ def test_gmm():
 
   # compare model with probe
   probe = gmm1.read_probe(pkg_resources.resource_filename('bob.bio.gmm.test', 'data/gmm_projected.hdf5'))
-  reference_score = -0.02335195
+  reference_score = -0.01676570
   assert abs(gmm1.score(model, probe) - reference_score) < 1e-5, "The scores differ: %3.8f, %3.8f" % (gmm1.score(model, probe), reference_score)
   assert abs(gmm1.score_for_multiple_probes(model, [probe, probe]) - reference_score) < 1e-5
 
@@ -171,7 +171,7 @@ def test_gmm_regular():
   probe = utils.random_array((20,45), -5., 5., seed=84)
 
   # compare model with probe
-  reference_score = -0.41556023
+  reference_score = -0.40840148
   assert abs(gmm1.score(model, probe) - reference_score) < 1e-5, "The scores differ: %3.8f, %3.8f" % (gmm1.score(model, probe), reference_score)
   # TODO: not implemented
   #assert abs(gmm1.score_for_multiple_probes(model, [probe, probe]) - reference_score) < 1e-5
@@ -236,7 +236,7 @@ def test_isv():
 
   # compare model with probe
   probe = isv1.read_probe(pkg_resources.resource_filename('bob.bio.gmm.test', 'data/isv_projected.hdf5'))
-  reference_score = 0.01732122
+  reference_score = 0.02136784
   assert abs(isv1.score(model, probe) - reference_score) < 1e-5, "The scores differ: %3.8f, %3.8f" % (isv1.score(model, probe), reference_score)
 #  assert abs(isv1.score_for_multiple_probes(model, [probe]*4) - reference_score) < 1e-5, isv1.score_for_multiple_probes(model, [probe, probe])
   # TODO: Why is the score not identical for multiple copies of the same probe?
@@ -320,7 +320,7 @@ def test_jfa():
 
   # compare model with probe
   probe = jfa1.read_probe(pkg_resources.resource_filename('bob.bio.gmm.test', 'data/gmm_projected.hdf5'))
-  reference_score = 0.01763115
+  reference_score = 0.02225812
   assert abs(jfa1.score(model, probe) - reference_score) < 1e-5, "The scores differ: %3.8f, %3.8f" % (jfa1.score(model, probe), reference_score)
   # TODO: implement that
   # assert abs(jfa1.score_for_multiple_probes(model, [probe, probe]) - reference_score) < 1e-5, jfa1.score_for_multiple_probes(model, [probe, probe])
