@@ -66,7 +66,7 @@ def test_gmm_sequential():
       '-d', 'dummy',
       '-p', 'dummy',
       '-e', 'dummy',
-      '-a', 'bob.bio.gmm.algorithm.GMM(2, 2, 2)', '--import', 'bob.bio.gmm',
+      '-a', 'bob.bio.gmm.algorithm.GMM(2, 2, 2)',
       '--zt-norm',
       '-s', 'test_gmm_sequential',
       '--temp-directory', test_dir,
@@ -108,7 +108,7 @@ def test_isv_sequential():
       '-d', 'dummy',
       '-p', 'dummy',
       '-e', 'dummy',
-      '-a', 'bob.bio.gmm.algorithm.ISV(10, number_of_gaussians=2, kmeans_training_iterations=2, gmm_training_iterations=2, isv_training_iterations=2)', '--import', 'bob.bio.gmm',
+      '-a', 'bob.bio.gmm.algorithm.ISV(10, number_of_gaussians=2, kmeans_training_iterations=2, gmm_training_iterations=2, isv_training_iterations=2)',
       '--zt-norm',
       '-s', 'test_isv_sequential',
       '--temp-directory', test_dir,
@@ -141,3 +141,45 @@ def test_isv_parallel():
   print (bob.bio.base.tools.command_line(parameters))
 
   _verify(parameters, test_dir, 'test_isv_parallel', executable=main, ref_modifier='-isv')
+
+
+def test_ivector_sequential():
+  test_dir = tempfile.mkdtemp(prefix='bobtest_')
+  # define dummy parameters
+  parameters = [
+      '-d', 'dummy',
+      '-p', 'dummy',
+      '-e', 'dummy',
+      '-a', 'bob.bio.gmm.algorithm.IVector(10, number_of_gaussians=2, kmeans_training_iterations=2, gmm_training_iterations=2, tv_training_iterations=2)',
+      '--zt-norm',
+      '-s', 'test_ivector_sequential',
+      '--temp-directory', test_dir,
+      '--result-directory', test_dir
+  ]
+
+  print (bob.bio.base.tools.command_line(parameters))
+
+  _verify(parameters, test_dir, 'test_ivector_sequential', ref_modifier='-ivector')
+
+
+def test_ivector_parallel():
+  from bob.bio.gmm.script.verify_ivector import main
+  test_dir = tempfile.mkdtemp(prefix='bobtest_')
+  test_database = os.path.join(test_dir, "submitted.sql3")
+  # define dummy parameters
+  parameters = [
+      '-d', 'dummy',
+      '-p', 'dummy',
+      '-e', 'dummy',
+      '-a', 'bob.bio.gmm.algorithm.IVector(10, number_of_gaussians=2, kmeans_training_iterations=2, gmm_training_iterations=2, tv_training_iterations=2)', '--import', 'bob.bio.gmm', 'bob.io.image',
+      '-g', 'bob.bio.base.grid.Grid(grid = "local", number_of_parallel_processes = 2, scheduler_sleep_time = 0.1)', '-G', test_database, '--run-local-scheduler', '-R',
+      '--clean-intermediate',
+      '--zt-norm',
+      '-s', 'test_ivector_parallel',
+      '--temp-directory', test_dir,
+      '--result-directory', test_dir
+  ]
+
+  print (bob.bio.base.tools.command_line(parameters))
+
+  _verify(parameters, test_dir, 'test_ivector_parallel', executable=main, ref_modifier='-ivector')

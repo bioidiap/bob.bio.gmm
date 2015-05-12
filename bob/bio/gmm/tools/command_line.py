@@ -27,9 +27,17 @@ def add_parallel_gmm_options(parsers, sub_module = None):
   sub_dir_group.add_argument('--gmm-directory',  default = 'gmm_temp',
       help = 'The sub-directory (relative to --temp-directory), where intermediate gmm files should be stored')
 
-  if sub_module == 'isv':
-    sub_dir_group.add_argument('--isv-directory',  default = 'isv_temp',
-        help = 'The sub-directory (relative to --temp-directory), where intermediate isv training files should be stored')
+  if sub_module is not None:
+    sub_dir_group.add_argument('--projected-gmm-directory', default = 'projetced_gmm',
+        help = 'The sub-directory (relative to --temp-directory), where projected gmm training files should be stored')
+
+  if sub_module == 'ivector':
+    sub_dir_group.add_argument('--ivector-directory',  default = 'ivector_temp',
+        help = 'The sub-directory (relative to --temp-directory), where intermediate ivector files should be stored')
+    sub_dir_group.add_argument('--projected-ivector-directory',  default = 'projected_ivector_temp',
+        help = 'The sub-directory (relative to --temp-directory), where intermediate projected ivector training files should be stored')
+    flag_group.add_argument('-i', '--tv-start-iteration', type=int, default=0,
+        help = 'Specify the first iteration for the IVector training (i.e. to restart from there)')
 
 
 
@@ -38,13 +46,20 @@ def _kmeans_intermediate_file(self, round):
   return os.path.join(self.directories['kmeans'], 'round_%05d' % round, 'kmeans.hdf5')
 
 def _kmeans_stats_file(self, round, start_index, end_index):
-  return os.path.join(self.directories['kmeans'], 'round_%05d' % round, 'stats-%05d-%95d.hdf5' % (start_index, end_index))
+  return os.path.join(self.directories['kmeans'], 'round_%05d' % round, 'stats-%05d-%05d.hdf5' % (start_index, end_index))
 
 def _gmm_intermediate_file(self, round):
-  return os.path.join(self.directories['gmm'], 'round_%05d' % round, 'gmm.hdf5')
+  return os.path.join(self.directories['gmm'], 'round_%05d' % round, 'ubm.hdf5')
 
 def _gmm_stats_file(self, round, start_index, end_index):
-  return os.path.join(self.directories['gmm'], 'round_%05d' % round, 'stats-%05d-%95d.hdf5' % (start_index, end_index))
+  return os.path.join(self.directories['gmm'], 'round_%05d' % round, 'stats-%05d-%05d.hdf5' % (start_index, end_index))
+
+
+def _ivector_intermediate_file(self, round):
+  return os.path.join(self.directories['ivector'], 'round_%05d' % round, 'tv.hdf5')
+
+def _ivector_stats_file(self, round, start_index, end_index):
+  return os.path.join(self.directories['ivector'], 'round_%05d' % round, 'stats-%05d-%05d.hdf5' % (start_index, end_index))
 
 
 def initialize_parallel_gmm(args, sub_module = None):
@@ -69,4 +84,12 @@ def initialize_parallel_gmm(args, sub_module = None):
     fs.ubm_file = fs.projector_file
   else:
     fs.ubm_file = os.path.join(args.temp_directory, sub_dir, "ubm.hdf5")
-    fs.directories['isv'] = os.path.join(args.temp_directory, sub_dir, args.isv_directory)
+    fs.directories['projected_gmm'] = os.path.join(args.temp_directory, sub_dir, args.projected_gmm_directory)
+    if sub_module == 'ivector':
+      fs.ivector_intermediate_file = types.MethodType(_ivector_intermediate_file, fs)
+      fs.ivector_stats_file = types.MethodType(_ivector_stats_file, fs)
+
+      fs.directories['ivector'] = os.path.join(args.temp_directory, sub_dir, args.ivector_directory)
+      fs.tv_file = os.path.join(args.temp_directory, sub_dir, "tv.hdf5")
+      fs.directories['projected_ivector'] = os.path.join(args.temp_directory, sub_dir, args.projected_ivector_directory)
+      fs.whitener_file = os.path.join(args.temp_directory, sub_dir, "whitener.hdf5")

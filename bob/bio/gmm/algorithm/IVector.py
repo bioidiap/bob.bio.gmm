@@ -65,18 +65,19 @@ class IVector (GMM):
 
   def train_ivector(self, training_stats):
     logger.info("  -> Training IVector enroller")
-    self.tv = bob.learn.em.IVectorMachine(self.ubm, self.subspace_dimension_of_t)
-    self.tv.variance_threshold = self.variance_threshold
+    self.tv = bob.learn.em.IVectorMachine(self.ubm, self.subspace_dimension_of_t, self.variance_threshold)
 
     # train IVector model
     bob.learn.em.train(self.ivector_trainer, self.tv, training_stats, self.tv_training_iterations, rng=self.rng)
 
-  def train_whitening(self, training_features):
+
+  def train_whitener(self, training_features):
     ivectors_matrix = numpy.vstack(training_features)
     # create a Linear Machine
     self.whitener = bob.learn.linear.Machine(ivectors_matrix.shape[1],ivectors_matrix.shape[1])
     # create the whitening trainer
     self.whitening_trainer.train(ivectors_matrix, self.whitener)
+
 
   def train_projector(self, train_features, projector_file):
     """Train Projector and Enroller at the same time"""
@@ -94,11 +95,12 @@ class IVector (GMM):
     self.train_ivector(training_stats)
 
     # project training i-vectors
-    whitening_train_data = [self.project_ivec(stats) for stats in training_stats]
-    self.train_whitening(whitening_train_data)
+    whitening_train_data = [self.project_ivector(stats) for stats in training_stats]
+    self.train_whitener(whitening_train_data)
 
     # save
     self.save_projector(projector_file)
+
 
   def save_projector(self, projector_file):
     # Save the IVector base AND the UBM AND the whitening into the same file
@@ -124,7 +126,7 @@ class IVector (GMM):
     # add UBM model from base class
     self.tv.ubm = self.ubm
 
-  def load_whitening(self, whitening_file):
+  def load_whitener(self, whitening_file):
     hdf5file = bob.io.base.HDF5File(whitening_file)
     self.whitener = bob.learn.linear.Machine(hdf5file)
 
@@ -143,10 +145,10 @@ class IVector (GMM):
 
     # Load Whitening
     hdf5file.cd('/Whitener')
-    self.load_whitening(hdf5file)
+    self.load_whitener(hdf5file)
 
 
-  def project_ivec(self, gmm_stats):
+  def project_ivector(self, gmm_stats):
     return self.tv.project(gmm_stats)
 
   def project_whitening(self, ivector):
@@ -161,7 +163,7 @@ class IVector (GMM):
     # project UBM
     projected_ubm = self.project_ubm(feature_array)
     # project I-Vector
-    ivector = self.project_ivec(projected_ubm)
+    ivector = self.project_ivector(projected_ubm)
     # whiten I-Vector
     return self.project_whitening(ivector)
 

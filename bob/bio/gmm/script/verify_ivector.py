@@ -20,20 +20,20 @@ def parse_arguments(command_line_parameters, exclude_resources_from = []):
   parsers = base_tools.command_line_parser(exclude_resources_from = exclude_resources_from)
 
   # add GMM-related options
-  tools.add_parallel_gmm_options(parsers, sub_module = 'isv')
+  tools.add_parallel_gmm_options(parsers, sub_module = 'ivector')
 
   # override some parameters
   parsers['config'].add_argument('-g', '--grid', metavar = 'x', nargs = '+', required=True,
     help = 'Configuration for the grid setup; required for the parallel execution script.')
 
-  parsers['config'].add_argument('-a', '--algorithm', metavar = 'x', nargs = '+', default = ['isv'],
+  parsers['config'].add_argument('-a', '--algorithm', metavar = 'x', nargs = '+', default = ['ivector'],
       help = 'Face recognition; only GMM-related algorithms are allowed')
 
 
   # Add sub-tasks that can be executed by this script
   parser = parsers['main']
   parser.add_argument('--sub-task',
-      choices = ('preprocess', 'train-extractor', 'extract', 'normalize-features', 'kmeans-init', 'kmeans-e-step', 'kmeans-m-step', 'gmm-init', 'gmm-e-step', 'gmm-m-step', 'gmm-project', 'train-isv', 'project', 'enroll', 'compute-scores', 'concatenate'),
+      choices = ('preprocess', 'train-extractor', 'extract', 'normalize-features', 'kmeans-init', 'kmeans-e-step', 'kmeans-m-step', 'gmm-init', 'gmm-e-step', 'gmm-m-step', 'gmm-project', 'ivector-e-step', 'ivector-m-step', 'ivector-project', 'train-whitener', 'project', 'enroll', 'compute-scores', 'concatenate'),
       help = argparse.SUPPRESS) #'Executes a subtask (FOR INTERNAL USE ONLY!!!)'
   parser.add_argument('--iteration', type = int,
       help = argparse.SUPPRESS) #'Which type of models to generate (Normal or TModels)'
@@ -46,30 +46,30 @@ def parse_arguments(command_line_parameters, exclude_resources_from = []):
 
   # now that we have set up everything, get the command line arguments
   args = base_tools.initialize(parsers, command_line_parameters,
-      skips = ['preprocessing', 'extractor-training', 'extraction', 'normalization', 'kmeans', 'gmm', 'isv', 'projection', 'enroller-training', 'enrollment', 'score-computation', 'concatenation', 'calibration']
+      skips = ['preprocessing', 'extractor-training', 'extraction', 'normalization', 'kmeans', 'gmm', 'ivector', 'whitening', 'projection', 'enroller-training', 'enrollment', 'score-computation', 'concatenation', 'calibration']
   )
 
   args.skip_projector_training = True
 
   # and add the GMM-related parameters
-  tools.initialize_parallel_gmm(args, sub_module = 'isv')
+  tools.initialize_parallel_gmm(args, sub_module = 'ivector')
 
   # assert that the algorithm is a GMM
-  if args.algorithm.__class__ != algorithm.ISV:
-    raise ValueError("The given algorithm %s is not a (pure) ISV algorithm" % type(args.algorithm))
+  if args.algorithm.__class__ != algorithm.IVector:
+    raise ValueError("The given algorithm %s is not a (pure) IVector algorithm" % type(args.algorithm))
 
   return args
 
 from .verify_gmm import add_gmm_jobs
 
-def add_isv_jobs(args, job_ids, deps, submitter):
+def add_ivector_jobs(args, job_ids, deps, submitter):
   """Adds all GMM-related jobs."""
 
   # first, add gmm jobs
   job_ids, deps = add_gmm_jobs(args, job_ids, deps, submitter)
 
-  # now, add two extra steps for ISV
-  if not args.skip_isv:
+  # now, add the extra steps for ivector
+  if not args.skip_ivector:
     # gmm projection
     job_ids['gmm-projection'] = submitter.submit(
             '--sub-task gmm-project',
@@ -79,12 +79,42 @@ def add_isv_jobs(args, job_ids, deps, submitter):
             **args.grid.projection_queue)
     deps.append(job_ids['gmm-projection'])
 
-    job_ids['isv-training'] = submitter.submit(
-            '--sub-task train-isv',
-            name = 'train-isv',
+    # several iterations of E and M steps
+    for iteration in range(args.tv_start_iteration, args.algorithm.tv_training_iterations):
+      # E-step
+      job_ids['ivector-e-step'] = submitter.submit(
+              '--sub-task ivector-e-step --iteration %d' % iteration,
+              name='i-e-%d' % iteration,
+              number_of_parallel_jobs = args.grid.number_of_projection_jobs,
+              dependencies = [job_ids['ivector-m-step']] if iteration != args.tv_start_iteration else deps,
+              **args.grid.projection_queue)
+
+      # M-step
+      job_ids['ivector-m-step'] = submitter.submit(
+              '--sub-task ivector-m-step --iteration %d' % iteration,
+              name='i-m-%d' % iteration,
+              dependencies = [job_ids['ivector-e-step']],
+              **args.grid.training_queue)
+    deps.append(job_ids['ivector-m-step'])
+
+  # whitening
+  if not args.skip_whitening:
+    # ivector projection
+    job_ids['ivector-projection'] = submitter.submit(
+            '--sub-task ivector-project',
+            name = 'pro-ivector',
+            number_of_parallel_jobs = args.grid.number_of_projection_jobs,
+            dependencies = deps,
+            **args.grid.projection_queue)
+    deps.append(job_ids['ivector-projection'])
+
+    # TV training
+    job_ids['whitener-training'] = submitter.submit(
+            '--sub-task train-whitener',
+            name = 'train-whitener',
             dependencies = deps,
             **args.grid.training_queue)
-    deps.append(job_ids['isv-training'])
+    deps.append(job_ids['whitener-training'])
 
   return job_ids, deps
 
@@ -112,9 +142,30 @@ def execute(args):
         indices = base_tools.indices(fs.training_list('extracted', 'train_projector'), args.grid.number_of_projection_jobs),
         force = args.force)
 
+  elif args.sub_task == 'ivector-e-step':
+    tools.ivector_estep(
+        args.algorithm,
+        args.iteration,
+        indices = base_tools.indices(fs.training_list('projected_gmm', 'train_projector'), args.grid.number_of_projection_jobs),
+        force = args.force)
+
   # train the feature projector
-  elif args.sub_task == 'train-isv':
-    tools.train_isv(
+  elif args.sub_task == 'ivector-m-step':
+    tools.ivector_mstep(
+        args.algorithm,
+        args.iteration,
+        number_of_parallel_jobs = args.grid.number_of_projection_jobs,
+        clean = args.clean_intermediate,
+        force = args.force)
+
+  elif args.sub_task == 'ivector-project':
+    tools.ivector_project(
+        args.algorithm,
+        indices = base_tools.indices(fs.training_list('projected_gmm', 'train_projector'), args.grid.number_of_projection_jobs),
+        force = args.force)
+
+  elif args.sub_task == 'train-whitener':
+    tools.train_whitener(
         args.algorithm,
         force = args.force)
 
@@ -146,8 +197,8 @@ def verify(args, command_line_parameters, external_fake_job_id = 0):
     return {}
   else:
     # add jobs
-    submitter = base_tools.GridSubmission(args, command_line_parameters, executable = 'verify_isv.py', first_fake_job_id = 0) if args.grid else None
-    retval = tools.add_jobs(args, submitter, local_job_adder = add_isv_jobs)
+    submitter = base_tools.GridSubmission(args, command_line_parameters, executable = 'verify_ivector.py', first_fake_job_id = 0) if args.grid else None
+    retval = tools.add_jobs(args, submitter, local_job_adder = add_ivector_jobs)
     base_tools.write_info(args, command_line_parameters)
 
     if args.grid.is_local() and args.run_local_scheduler:
