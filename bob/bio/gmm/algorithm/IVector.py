@@ -57,7 +57,7 @@ class IVector (GMM):
 
   def _check_projected(self, feature):
     """Checks that the features are appropriate"""
-    if not isinstance(feature, numpy.ndarray) or len(feature.shape) != 1 or feature.dtype != numpy.float64:
+    if not isinstance(feature, numpy.ndarray) or feature.ndim != 1 or feature.dtype != numpy.float64:
       raise ValueError("The given feature is not appropriate")
     if self.whitener is not None and feature.shape[0] != self.whitener.shape[1]:
       raise ValueError("The given feature is expected to have %d elements, but it has %d" % (self.whitener.shape[1], feature.shape[0]))

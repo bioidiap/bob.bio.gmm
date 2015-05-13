@@ -186,7 +186,7 @@ class ISV (GMM):
     assert isinstance(probe, (tuple, list))
     assert len(probe) == 2
     assert isinstance(probe[0], bob.learn.em.GMMStats)
-    assert isinstance(probe[1], numpy.ndarray) and len(probe[1].shape) == 1 and probe[1].dtype == numpy.float64
+    assert isinstance(probe[1], numpy.ndarray) and probe[1].ndim == 1 and probe[1].dtype == numpy.float64
 
 
   def score(self, model, probe):

@@ -104,7 +104,7 @@ setup(
       'console_scripts' : [
         'verify_gmm.py      = bob.bio.gmm.script.verify_gmm:main',
         'verify_isv.py      = bob.bio.gmm.script.verify_isv:main',
-        'verify_ivector.py      = bob.bio.gmm.script.verify_ivector:main',
+        'verify_ivector.py  = bob.bio.gmm.script.verify_ivector:main',
       ],
 
       'bob.bio.database': [
