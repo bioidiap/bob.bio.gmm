@@ -7,7 +7,9 @@ def add_jobs(args, submitter, local_job_adder):
 
   # Here, we use the default bob.bio.base add_jobs function, but intercept it for adding the training
   SKIPS = ['preprocessing', 'extractor_training', 'extraction', 'projector_training', 'projection', 'enroller_training', 'enrollment', 'score_computation', 'concatenation', 'calibration']
-  original_skips = {key : args.__dict__["skip_%s" % key] for key in SKIPS}
+#  original_skips = {key : args.__dict__["skip_%s" % key] for key in SKIPS}
+  original_skips = {}
+  for key in SKIPS: original_skips[key] = args.__dict__["skip_%s" % key]
 
   # first, submit preprocessing and feature extraction; skip all others
   for key in SKIPS[3:]:
