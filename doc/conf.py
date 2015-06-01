@@ -63,7 +63,7 @@ import time
 copyright = u'%s, Idiap Research Institute' % time.strftime('%Y')
 
 # Grab the setup entry
-distribution = pkg_resources.require('bob.bio.base')[0]
+distribution = pkg_resources.require('bob.bio.gmm')[0]
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -246,7 +246,7 @@ autodoc_default_flags = ['members', 'undoc-members', 'inherited-members', 'show-
 
 # For inter-documentation mapping:
 from bob.extension.utils import link_documentation
-intersphinx_mapping = link_documentation(['python', 'numpy', 'bob.io.base', 'bob.db.verification.utils'])
+intersphinx_mapping = link_documentation(['python', 'numpy', 'bob.io.gmm', 'bob.db.verification.utils'])
 
 
 def setup(app):
