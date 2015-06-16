@@ -12,7 +12,7 @@ def train_isv(algorithm, force=False):
   fs = FileSelector.instance()
 
   if utils.check_file(fs.projector_file, force, 800):
-    logger.info("ISV training: Skipping ISV training since '%s' already exists", fs.isv_file)
+    logger.info("ISV training: Skipping ISV training since '%s' already exists", fs.projector_file)
   else:
     # read UBM into the ISV class
     algorithm.load_ubm(fs.ubm_file)
