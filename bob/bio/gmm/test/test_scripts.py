@@ -3,7 +3,6 @@ from __future__ import print_function
 import bob.measure
 
 import os
-import sys
 import shutil
 import tempfile
 import numpy
@@ -24,7 +23,7 @@ data_dir = pkg_resources.resource_filename('bob.bio.gmm', 'test/data')
 
 def _verify(parameters, test_dir, sub_dir, ref_modifier="", score_modifier=('scores',''), executable = main):
   try:
-    executable([sys.argv[0]] + parameters)
+    executable(parameters)
 
     # assert that the score file exists
     score_files = [os.path.join(test_dir, sub_dir, 'Default', norm, '%s-dev%s'%score_modifier) for norm in ('nonorm',  'ztnorm')]

@@ -146,9 +146,9 @@ def verify(args, command_line_parameters, external_fake_job_id = 0):
     return {}
   else:
     # add jobs
-    submitter = base_tools.GridSubmission(args, command_line_parameters, executable = 'verify_isv.py', first_fake_job_id = 0) if args.grid else None
+    submitter = base_tools.GridSubmission(args, command_line_parameters, executable = 'verify_isv.py', first_fake_job_id = 0)
     retval = tools.add_jobs(args, submitter, local_job_adder = add_isv_jobs)
-    base_tools.write_info(args, command_line_parameters)
+    base_tools.write_info(args, command_line_parameters, submitter.executable)
 
     if args.grid.is_local() and args.run_local_scheduler:
       if args.dry_run:
@@ -163,11 +163,11 @@ def verify(args, command_line_parameters, external_fake_job_id = 0):
       return retval
 
 
-def main(command_line_parameters = sys.argv):
+def main(command_line_parameters = None):
   """Executes the main function"""
   try:
     # do the command line parsing
-    args = parse_arguments(command_line_parameters[1:])
+    args = parse_arguments(command_line_parameters)
 
     # perform face verification test
     verify(args, command_line_parameters)
