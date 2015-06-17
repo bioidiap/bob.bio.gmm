@@ -3,7 +3,7 @@ import bob.io.base
 
 from bob.bio.base.extractor import Extractor
 
-_data = [0., 1., 2., 3., 4.]
+_data = [10., 11., 12., 13., 14.]
 
 class DummyExtractor (Extractor):
   def __init__(self):

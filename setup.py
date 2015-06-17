@@ -115,7 +115,7 @@ setup(
       ],
 
       'bob.bio.extractor': [
-        'dummy             = bob.bio.gmm.test.dummy.extractor:extractor', # for test purposes only
+        'dummy2d           = bob.bio.gmm.test.dummy.extractor:extractor', # for test purposes only
       ],
 
       'bob.bio.algorithm': [
