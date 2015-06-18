@@ -55,7 +55,7 @@ def parse_arguments(command_line_parameters, exclude_resources_from = []):
   tools.initialize_parallel_gmm(args, sub_module = 'ivector')
 
   # assert that the algorithm is a GMM
-  if args.algorithm.__class__ != algorithm.IVector:
+  if tools.base(args.algorithm).__class__ != algorithm.IVector:
     raise ValueError("The given algorithm %s is not a (pure) IVector algorithm" % type(args.algorithm))
 
   return args
@@ -69,6 +69,8 @@ def add_ivector_jobs(args, job_ids, deps, submitter):
   job_ids, deps = add_gmm_jobs(args, job_ids, deps, submitter)
 
   # now, add the extra steps for ivector
+  algorithm = tools.base(args.algorithm)
+
   if not args.skip_ivector:
     # gmm projection
     job_ids['gmm-projection'] = submitter.submit(
@@ -80,7 +82,7 @@ def add_ivector_jobs(args, job_ids, deps, submitter):
     deps.append(job_ids['gmm-projection'])
 
     # several iterations of E and M steps
-    for iteration in range(args.tv_start_iteration, args.algorithm.tv_training_iterations):
+    for iteration in range(args.tv_start_iteration, algorithm.tv_training_iterations):
       # E-step
       job_ids['ivector-e-step'] = submitter.submit(
               '--sub-task ivector-e-step --iteration %d' % iteration,
@@ -131,20 +133,21 @@ def execute(args):
     return True
 
   # now, check what we can do
+  algorithm = tools.base(args.algorithm)
 
   # the file selector object
   fs = tools.FileSelector.instance()
 
   if args.sub_task == 'gmm-project':
     tools.gmm_project(
-        args.algorithm,
+        algorithm,
         args.extractor,
         indices = base_tools.indices(fs.training_list('extracted', 'train_projector'), args.grid.number_of_projection_jobs),
         force = args.force)
 
   elif args.sub_task == 'ivector-e-step':
     tools.ivector_estep(
-        args.algorithm,
+        algorithm,
         args.iteration,
         indices = base_tools.indices(fs.training_list('projected_gmm', 'train_projector'), args.grid.number_of_projection_jobs),
         force = args.force)
@@ -152,7 +155,7 @@ def execute(args):
   # train the feature projector
   elif args.sub_task == 'ivector-m-step':
     tools.ivector_mstep(
-        args.algorithm,
+        algorithm,
         args.iteration,
         number_of_parallel_jobs = args.grid.number_of_projection_jobs,
         clean = args.clean_intermediate,
@@ -160,13 +163,13 @@ def execute(args):
 
   elif args.sub_task == 'ivector-project':
     tools.ivector_project(
-        args.algorithm,
+        algorithm,
         indices = base_tools.indices(fs.training_list('projected_gmm', 'train_projector'), args.grid.number_of_projection_jobs),
         force = args.force)
 
   elif args.sub_task == 'train-whitener':
     tools.train_whitener(
-        args.algorithm,
+        algorithm,
         force = args.force)
 
   else:

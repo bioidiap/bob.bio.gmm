@@ -1,4 +1,5 @@
 import bob.bio.base
+import numpy
 
 def add_jobs(args, submitter, local_job_adder):
   """Adds all (desired) jobs of the tool chain to the grid, or to the local list to be executed."""
@@ -47,3 +48,28 @@ def add_jobs(args, submitter, local_job_adder):
     setattr(args, "skip_%s" % key, original_skips[key])
 
   return job_ids
+
+
+def is_video_extension(algorithm):
+  try:
+    import bob.bio.video
+    if isinstance(algorithm, bob.bio.video.algorithm.Algorithm):
+      return True
+  except ImportError:
+    pass
+  return False
+
+def base(algorithm):
+  """Returns the base algorithm, if it is a video extension, otherwise returns the algorithm itself"""
+  return algorithm.algorithm if is_video_extension(algorithm) else algorithm
+
+def read_feature(extractor, feature_file):
+  feature = extractor.read_feature(feature_file)
+  try:
+    import bob.bio.video
+    if isinstance(extractor, bob.bio.video.extractor.Extractor):
+      assert isinstance(feature, bob.bio.video.FrameContainer)
+      return numpy.vstack([frame for _,frame,_ in feature])
+  except ImportError:
+    pass
+  return feature

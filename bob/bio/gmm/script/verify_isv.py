@@ -55,7 +55,7 @@ def parse_arguments(command_line_parameters, exclude_resources_from = []):
   tools.initialize_parallel_gmm(args, sub_module = 'isv')
 
   # assert that the algorithm is a GMM
-  if args.algorithm.__class__ != algorithm.ISV:
+  if tools.base(args.algorithm).__class__ != algorithm.ISV:
     raise ValueError("The given algorithm %s is not a (pure) ISV algorithm" % type(args.algorithm))
 
   return args
@@ -101,13 +101,14 @@ def execute(args):
     return True
 
   # now, check what we can do
+  algorithm = tools.base(args.algorithm)
 
   # the file selector object
   fs = tools.FileSelector.instance()
 
   if args.sub_task == 'gmm-project':
     tools.gmm_project(
-        args.algorithm,
+        algorithm,
         args.extractor,
         indices = base_tools.indices(fs.training_list('extracted', 'train_projector'), args.grid.number_of_projection_jobs),
         force = args.force)
@@ -115,7 +116,7 @@ def execute(args):
   # train the feature projector
   elif args.sub_task == 'train-isv':
     tools.train_isv(
-        args.algorithm,
+        algorithm,
         force = args.force)
 
   else:

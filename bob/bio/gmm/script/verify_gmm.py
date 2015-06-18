@@ -55,13 +55,15 @@ def parse_arguments(command_line_parameters, exclude_resources_from = []):
   tools.initialize_parallel_gmm(args)
 
   # assert that the algorithm is a GMM
-  if args.algorithm.__class__ not in (algorithm.GMM, algorithm.GMMRegular):
+  if tools.base(args.algorithm).__class__ not in (algorithm.GMM, algorithm.GMMRegular):
     raise ValueError("The given algorithm %s is not a (pure) GMM algorithm" % type(args.algorithm))
 
   return args
 
 def add_gmm_jobs(args, job_ids, deps, submitter):
   """Adds all GMM-related jobs."""
+
+  algorithm = tools.base(args.algorithm)
 
   # KMeans
   if not args.skip_kmeans:
@@ -75,7 +77,7 @@ def add_gmm_jobs(args, job_ids, deps, submitter):
       deps.append(job_ids['kmeans-init'])
 
     # several iterations of E and M steps
-    for iteration in range(args.kmeans_start_iteration, args.algorithm.kmeans_training_iterations):
+    for iteration in range(args.kmeans_start_iteration, algorithm.kmeans_training_iterations):
       # E-step
       job_ids['kmeans-e-step'] = submitter.submit(
               '--sub-task kmeans-e-step --iteration %d' % iteration,
@@ -106,7 +108,7 @@ def add_gmm_jobs(args, job_ids, deps, submitter):
       deps.append(job_ids['gmm-init'])
 
     # several iterations of E and M steps
-    for iteration in range(args.gmm_start_iteration, args.algorithm.gmm_training_iterations):
+    for iteration in range(args.gmm_start_iteration, algorithm.gmm_training_iterations):
       # E-step
       job_ids['gmm-e-step'] = submitter.submit(
               '--sub-task gmm-e-step --iteration %d' % iteration,
@@ -138,6 +140,7 @@ def execute(args):
     return True
 
   # now, check what we can do
+  algorithm = tools.base(args.algorithm)
 
   # the file selector object
   fs = tools.FileSelector.instance()
@@ -145,7 +148,7 @@ def execute(args):
   # train the feature projector
   if args.sub_task == 'kmeans-init':
     tools.kmeans_initialize(
-        args.algorithm,
+        algorithm,
         args.extractor,
         args.limit_training_data,
         force = args.force)
@@ -153,7 +156,7 @@ def execute(args):
   # train the feature projector
   elif args.sub_task == 'kmeans-e-step':
     tools.kmeans_estep(
-        args.algorithm,
+        algorithm,
         args.extractor,
         args.iteration,
         indices = base_tools.indices(fs.training_list('extracted', 'train_projector'), args.grid.number_of_projection_jobs),
@@ -162,7 +165,7 @@ def execute(args):
   # train the feature projector
   elif args.sub_task == 'kmeans-m-step':
     tools.kmeans_mstep(
-        args.algorithm,
+        algorithm,
         args.iteration,
         number_of_parallel_jobs = args.grid.number_of_projection_jobs,
         clean = args.clean_intermediate,
@@ -170,7 +173,7 @@ def execute(args):
 
   elif args.sub_task == 'gmm-init':
     tools.gmm_initialize(
-        args.algorithm,
+        algorithm,
         args.extractor,
         args.limit_training_data,
         force = args.force)
@@ -178,7 +181,7 @@ def execute(args):
   # train the feature projector
   elif args.sub_task == 'gmm-e-step':
     tools.gmm_estep(
-        args.algorithm,
+        algorithm,
         args.extractor,
         args.iteration,
         indices = base_tools.indices(fs.training_list('extracted', 'train_projector'), args.grid.number_of_projection_jobs),
@@ -187,7 +190,7 @@ def execute(args):
   # train the feature projector
   elif args.sub_task == 'gmm-m-step':
     tools.gmm_mstep(
-        args.algorithm,
+        algorithm,
         args.iteration,
         number_of_parallel_jobs = args.grid.number_of_projection_jobs,
         clean = args.clean_intermediate,
