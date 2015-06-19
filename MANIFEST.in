@@ -1,2 +1,3 @@
 include README.rst bootstrap-buildout.py buildout.cfg develop.cfg COPYING version.txt requirements.txt
 recursive-include doc *.py *.rst
+recursive-include bob/bio/gmm/test/data *.lst *.hdf5 *-dev 
