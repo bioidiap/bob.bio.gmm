@@ -2,17 +2,19 @@
 .. Andre Anjos <andre.anjos@idiap.ch>
 .. Mon 13 Aug 2012 12:36:40 CEST
 
-=====================
- Bob Example Project
-=====================
+.. _bob.bio.gmm:
+
+====================================================
+ Biometric Recognition with Gaussian Mixture Models
+====================================================
 
 
 Package Documentation
 ---------------------
 
-.. automodule:: bob.bio.base
+.. automodule:: bob.bio.gmm
 
 Databases
 ---------
 
-.. automodule:: bob.bio.base.database
+.. automodule:: bob.bio.gmm.database
