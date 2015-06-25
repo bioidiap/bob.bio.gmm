@@ -29,7 +29,7 @@ def kmeans_initialize(algorithm, extractor, limit_data = None, force = False):
     # Perform KMeans initialization
     kmeans_machine = bob.learn.em.KMeansMachine(algorithm.gaussians, data.shape[1])
     # Creates the KMeansTrainer and call the initialization procedure
-    algorithm.kmeans_trainer.initialize(kmeans_machine, data)
+    algorithm.kmeans_trainer.initialize(kmeans_machine, data, algorithm.rng)
     bob.io.base.create_directories_safe(os.path.dirname(output_file))
     kmeans_machine.save(bob.io.base.HDF5File(output_file, 'w'))
     logger.info("UBM training: saved initial KMeans machine to '%s'", output_file)
