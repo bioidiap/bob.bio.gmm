@@ -91,7 +91,7 @@ def _read_stats(filename):
 def _accumulate(filenames):
   zeroeth, first, nsamples, dist = _read_stats(filenames[0])
   for stat in filenames[1:]:
-    zeroeth_, first_, nsamples_, dist_ = _read_stats(filenames[1])
+    zeroeth_, first_, nsamples_, dist_ = _read_stats(stat)
     zeroeth += zeroeth_
     first += first_
     nsamples += nsamples_
