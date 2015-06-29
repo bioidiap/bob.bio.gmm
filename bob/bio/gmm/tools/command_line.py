@@ -28,7 +28,7 @@ def add_parallel_gmm_options(parsers, sub_module = None):
       help = 'The sub-directory (relative to --temp-directory), where intermediate gmm files should be stored')
 
   if sub_module is not None:
-    sub_dir_group.add_argument('--projected-gmm-directory', default = 'projetced_gmm',
+    sub_dir_group.add_argument('--projected-gmm-directory', default = 'projected_gmm',
         help = 'The sub-directory (relative to --temp-directory), where projected gmm training files should be stored')
 
   if sub_module == 'ivector':
