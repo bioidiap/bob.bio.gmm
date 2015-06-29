@@ -58,7 +58,7 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = u'Bob Example Project'
+project = u'Gaussian Mixture Model based algorithms for bob.bio'
 import time
 copyright = u'%s, Idiap Research Institute' % time.strftime('%Y')
 
