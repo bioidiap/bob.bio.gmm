@@ -179,33 +179,3 @@ def train_whitener(algorithm, force=False):
   algorithm.load_whitener(fs.whitener_file)
   logger.info("Writing projector into file %s", fs.projector_file)
   algorithm.save_projector(fs.projector_file)
-
-
-"""
-def whitening_ivector(self, indices=None, force=False):
-  ""Performs IVector projection""
-  # read UBM into the IVector class
-  projector = self.m_tool.load_whitening(self.m_configuration.whitening_file)
-
-  projected_ivec_files = self.projected_list(groups=self.groups(), directory=self.m_configuration.ivec_directory)
-  projected_whitened_files = self.projected_list(groups=self.groups(), directory=self.m_configuration.whitening_directory)
-
-  # select a subset of indices to iterate
-  if indices != None:
-    index_range = range(indices[0], indices[1])
-    facereclib.utils.info("- Projection: splitting of index range %s" % str(indices))
-  else:
-    index_range = range(len(projected_ivec_files))
-
-  facereclib.utils.info("- Projection: projecting %d gmm stats from directory '%s' to directory '%s'" % (len(index_range), self.m_configuration.ivec_directory, self.m_configuration.whitening_directory))
-  # extract the features
-  for i in index_range:
-    if not self.m_tool_chain.__check_file__(projected_whitened_files[i], force):
-      # load feature
-      feature = facereclib.utils.load(str(projected_ivec_files[i]))
-      # project feature
-      whitened = self.m_tool.project_whitening(feature)
-      # write it
-      facereclib.utils.ensure_dir(os.path.dirname(projected_whitened_files[i]))
-      facereclib.utils.save(whitened, str(projected_whitened_files[i]))
-"""

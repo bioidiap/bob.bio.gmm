@@ -86,7 +86,7 @@ release = distribution.version
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
-#exclude_patterns = ['**/links.rst']
+exclude_patterns = ['links.rst', 'references.rst']
 
 # The reST default role (used for this markup: `text`) to use for all documents.
 #default_role = None
@@ -133,12 +133,12 @@ if sphinx.__version__ >= "1.0":
 
 # The name of an image file (relative to this directory) to place at the top
 # of the sidebar.
-html_logo = ''
+html_logo = 'img/logo.png'
 
 # The name of an image file (within the static path) to use as favicon of the
 # docs.  This file should be a Windows icon file (.ico) being 16x16 or 32x32
 # pixels large.
-html_favicon = ''
+html_favicon = 'img/favicon.ico'
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
@@ -187,7 +187,7 @@ html_favicon = ''
 #html_file_suffix = None
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = 'bob_example_project_doc'
+htmlhelp_basename = 'bob_bio_gmm_doc'
 
 
 # -- Options for LaTeX output --------------------------------------------------
@@ -201,7 +201,7 @@ latex_font_size = '10pt'
 # Grouping the document tree into LaTeX files. List of tuples
 # (source start file, target name, title, author, documentclass [howto/manual]).
 latex_documents = [
-  ('index', 'bob_example_project.tex', u'Bob',
+  ('index', 'bob_bio_gmm.tex', u'Bob',
    u'Biometrics Group, Idiap Research Institute', 'manual'),
 ]
 
@@ -236,7 +236,7 @@ rst_epilog = ''
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    ('index', 'bob.example.project', u'Bob Example Project Documentation', [u'Idiap Research Institute'], 1)
+    ('index', 'bob.bio.gmm', u'Gaussian Mixture Models in bob.bio Documentation', [u'Idiap Research Institute'], 1)
 ]
 
 # Default processing flags for sphinx
@@ -246,8 +246,14 @@ autodoc_default_flags = ['members', 'undoc-members', 'inherited-members', 'show-
 
 # For inter-documentation mapping:
 from bob.extension.utils import link_documentation
-intersphinx_mapping = link_documentation(['python', 'numpy', 'bob.io.gmm', 'bob.db.verification.utils'])
+intersphinx_mapping = link_documentation(['python', 'numpy', 'bob.io.gmm'])
 
+
+def skip(app, what, name, obj, skip, options):
+  # Do not skip the __call__ and the __str__ functions as we have special implementations for them.
+  if name in ("__call__"):
+    return False
+  return skip
 
 def setup(app):
-  pass
+  app.connect("autodoc-skip-member", skip)
