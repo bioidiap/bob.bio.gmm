@@ -11,6 +11,8 @@ import bob.io.image
 import bob.bio.base
 import bob.bio.gmm
 
+import bob.bio.base.test.utils
+
 from nose.plugins.skip import SkipTest
 
 import pkg_resources
@@ -77,6 +79,7 @@ def test_gmm_sequential():
   _verify(parameters, test_dir, 'test_gmm_sequential', ref_modifier='-gmm')
 
 
+@bob.bio.base.test.utils.grid_available
 def test_gmm_parallel():
   from bob.bio.gmm.script.verify_gmm import main
   test_dir = tempfile.mkdtemp(prefix='bobtest_')
@@ -119,6 +122,7 @@ def test_isv_sequential():
   _verify(parameters, test_dir, 'test_isv_sequential', ref_modifier='-isv')
 
 
+@bob.bio.base.test.utils.grid_available
 def test_isv_parallel():
   from bob.bio.gmm.script.verify_isv import main
   test_dir = tempfile.mkdtemp(prefix='bobtest_')
@@ -161,6 +165,7 @@ def test_ivector_sequential():
   _verify(parameters, test_dir, 'test_ivector_sequential', ref_modifier='-ivector')
 
 
+@bob.bio.base.test.utils.grid_available
 def test_ivector_parallel():
   from bob.bio.gmm.script.verify_ivector import main
   test_dir = tempfile.mkdtemp(prefix='bobtest_')
