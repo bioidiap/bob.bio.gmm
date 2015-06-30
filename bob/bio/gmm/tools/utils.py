@@ -53,7 +53,7 @@ def add_jobs(args, submitter, local_job_adder):
 def is_video_extension(algorithm):
   try:
     import bob.bio.video
-    if isinstance(algorithm, bob.bio.video.algorithm.Algorithm):
+    if isinstance(algorithm, bob.bio.video.algorithm.Wrapper):
       return True
   except ImportError:
     pass
@@ -67,7 +67,7 @@ def read_feature(extractor, feature_file):
   feature = extractor.read_feature(feature_file)
   try:
     import bob.bio.video
-    if isinstance(extractor, bob.bio.video.extractor.Extractor):
+    if isinstance(extractor, bob.bio.video.extractor.Wrapper):
       assert isinstance(feature, bob.bio.video.FrameContainer)
       return numpy.vstack([frame for _,frame,_ in feature])
   except ImportError:
