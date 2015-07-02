@@ -36,9 +36,14 @@ def add_parallel_gmm_options(parsers, sub_module = None):
         help = 'The sub-directory (relative to --temp-directory), where intermediate ivector files should be stored')
     sub_dir_group.add_argument('--projected-ivector-directory',  default = 'projected_ivector_temp',
         help = 'The sub-directory (relative to --temp-directory), where intermediate projected ivector training files should be stored')
+    sub_dir_group.add_argument('--whitened-directory',  default = 'whitened_temp',
+        help = 'The sub-directory (relative to --temp-directory), where intermediate whitened ivector training files should be stored')    
+    sub_dir_group.add_argument('--lda-projected-directory',  default = 'lda_projected_temp',
+        help = 'The sub-directory (relative to --temp-directory), where intermediate LDA projected ivector training files should be stored')    
+    sub_dir_group.add_argument('--wccn-projected-directory',  default = 'wccn_projected_temp',
+        help = 'The sub-directory (relative to --temp-directory), where intermediate WCCN projected ivector training files should be stored')            
     flag_group.add_argument('-i', '--tv-start-iteration', type=int, default=0,
         help = 'Specify the first iteration for the IVector training (i.e. to restart from there)')
-
 
 
 # Functions to be added to the FileSelector class, once it is instantiated
@@ -91,5 +96,11 @@ def initialize_parallel_gmm(args, sub_module = None):
 
       fs.directories['ivector'] = os.path.join(args.temp_directory, sub_dir, args.ivector_directory)
       fs.tv_file = os.path.join(args.temp_directory, sub_dir, "tv.hdf5")
-      fs.directories['projected_ivector'] = os.path.join(args.temp_directory, sub_dir, args.projected_ivector_directory)
       fs.whitener_file = os.path.join(args.temp_directory, sub_dir, "whitener.hdf5")
+      fs.lda_file = os.path.join(args.temp_directory, sub_dir, "lda.hdf5")
+      fs.wccn_file = os.path.join(args.temp_directory, sub_dir, "wccm.hdf5")
+      fs.plda_file = os.path.join(args.temp_directory, sub_dir, "plda.hdf5")
+      fs.directories['projected_ivector'] = os.path.join(args.temp_directory, sub_dir, args.projected_ivector_directory)
+      fs.directories['whitened'] = os.path.join(args.temp_directory, sub_dir, args.whitened_directory)
+      fs.directories['lda_projected'] = os.path.join(args.temp_directory, sub_dir, args.lda_projected_directory)
+      fs.directories['wccn_projected'] = os.path.join(args.temp_directory, sub_dir, args.wccn_projected_directory)

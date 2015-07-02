@@ -119,11 +119,12 @@ setup(
       ],
 
       'bob.bio.algorithm': [
-        'gmm               = bob.bio.gmm.config.algorithm.gmm:algorithm',
-        'gmm-regular       = bob.bio.gmm.config.algorithm.gmm_regular:algorithm',
-        'jfa               = bob.bio.gmm.config.algorithm.jfa:algorithm',
-        'isv               = bob.bio.gmm.config.algorithm.isv:algorithm',
-        'ivector           = bob.bio.gmm.config.algorithm.ivector:algorithm',
+        'gmm                            = bob.bio.gmm.config.algorithm.gmm:algorithm',
+        'gmm-regular               = bob.bio.gmm.config.algorithm.gmm_regular:algorithm',
+        'jfa                                = bob.bio.gmm.config.algorithm.jfa:algorithm',
+        'isv                                = bob.bio.gmm.config.algorithm.isv:algorithm',
+        'ivector-cosine             = bob.bio.gmm.config.algorithm.ivector_cosine:algorithm',
+        'ivector-lda-wccn-plda = bob.bio.gmm.config.algorithm.ivector_lda_wccn_plda:algorithm',
       ],
    },
 

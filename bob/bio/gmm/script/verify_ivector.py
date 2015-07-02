@@ -33,7 +33,7 @@ def parse_arguments(command_line_parameters, exclude_resources_from = []):
   # Add sub-tasks that can be executed by this script
   parser = parsers['main']
   parser.add_argument('--sub-task',
-      choices = ('preprocess', 'train-extractor', 'extract', 'normalize-features', 'kmeans-init', 'kmeans-e-step', 'kmeans-m-step', 'gmm-init', 'gmm-e-step', 'gmm-m-step', 'gmm-project', 'ivector-e-step', 'ivector-m-step', 'ivector-project', 'train-whitener', 'project', 'enroll', 'compute-scores', 'concatenate'),
+      choices = ('preprocess', 'train-extractor', 'extract', 'normalize-features', 'kmeans-init', 'kmeans-e-step', 'kmeans-m-step', 'gmm-init', 'gmm-e-step', 'gmm-m-step', 'gmm-project', 'ivector-e-step', 'ivector-m-step', 'ivector-training', 'ivector-projection', 'train-whitener', 'whitening-projection', 'train-lda', 'lda-projection', 'train-wccn', 'wccn-projection',  'project', 'train-plda',  'save-projector', 'enroll', 'compute-scores', 'concatenate'),
       help = argparse.SUPPRESS) #'Executes a subtask (FOR INTERNAL USE ONLY!!!)'
   parser.add_argument('--iteration', type = int,
       help = argparse.SUPPRESS) #'Which type of models to generate (Normal or TModels)'
@@ -46,7 +46,7 @@ def parse_arguments(command_line_parameters, exclude_resources_from = []):
 
   # now that we have set up everything, get the command line arguments
   args = base_tools.initialize(parsers, command_line_parameters,
-      skips = ['preprocessing', 'extractor-training', 'extraction', 'normalization', 'kmeans', 'gmm', 'ivector', 'whitening', 'projection', 'enroller-training', 'enrollment', 'score-computation', 'concatenation', 'calibration']
+      skips = ['preprocessing', 'extractor-training', 'extraction', 'normalization', 'kmeans', 'gmm', 'ivector-training', 'ivector-projection', 'train-whitener', 'whitening-projection', 'train-lda', 'lda-projection', 'train-wccn', 'wccn-projection',  'projection', 'train-plda', 'enroller-training', 'enrollment', 'score-computation', 'concatenation', 'calibration']
   )
 
   args.skip_projector_training = True
@@ -71,7 +71,7 @@ def add_ivector_jobs(args, job_ids, deps, submitter):
   # now, add the extra steps for ivector
   algorithm = tools.base(args.algorithm)
 
-  if not args.skip_ivector:
+  if not args.skip_ivector_training:
     # gmm projection
     job_ids['gmm-projection'] = submitter.submit(
             '--sub-task gmm-project',
@@ -99,18 +99,19 @@ def add_ivector_jobs(args, job_ids, deps, submitter):
               **args.grid.training_queue)
     deps.append(job_ids['ivector-m-step'])
 
-  # whitening
-  if not args.skip_whitening:
-    # ivector projection
+
+  # ivector projection
+  if not args.skip_ivector_projection:
     job_ids['ivector-projection'] = submitter.submit(
-            '--sub-task ivector-project',
+            '--sub-task ivector-projection',
             name = 'pro-ivector',
             number_of_parallel_jobs = args.grid.number_of_projection_jobs,
             dependencies = deps,
             **args.grid.projection_queue)
     deps.append(job_ids['ivector-projection'])
 
-    # TV training
+  # train whitener
+  if not args.skip_train_whitener:
     job_ids['whitener-training'] = submitter.submit(
             '--sub-task train-whitener',
             name = 'train-whitener',
@@ -118,6 +119,71 @@ def add_ivector_jobs(args, job_ids, deps, submitter):
             **args.grid.training_queue)
     deps.append(job_ids['whitener-training'])
 
+  # whitening projection
+  if not args.skip_whitening_projection:
+    job_ids['whitening-projection'] = submitter.submit(
+            '--sub-task whitening-projection',
+            name = 'whitened',
+            number_of_parallel_jobs = args.grid.number_of_projection_jobs,
+            dependencies = deps,
+            **args.grid.projection_queue)
+    deps.append(job_ids['whitening-projection'])
+
+  # train LDA
+  if not args.skip_train_lda:
+    job_ids['lda-training'] = submitter.submit(
+            '--sub-task train-lda',
+            name = 'train-lda',
+            dependencies = deps,
+            **args.grid.training_queue)
+    deps.append(job_ids['lda-training'])
+
+  # LDA projection
+  if not args.skip_lda_projection:
+    job_ids['lda-projection'] = submitter.submit(
+            '--sub-task lda-projection',
+            name = 'lda_projection',
+            number_of_parallel_jobs = args.grid.number_of_projection_jobs,
+            dependencies = deps,
+            **args.grid.projection_queue)
+    deps.append(job_ids['lda-projection'])
+
+  # train WCCN
+  if not args.skip_train_wccn:
+    job_ids['wccn-training'] = submitter.submit(
+            '--sub-task train-wccn',
+            name = 'train-wccn',
+            dependencies = deps,
+            **args.grid.training_queue)
+    deps.append(job_ids['wccn-training'])
+
+  # WCCN projection
+  if not args.skip_wccn_projection:
+    job_ids['wccn-projection'] = submitter.submit(
+            '--sub-task wccn-projection',
+            name = 'wccn_projection',
+            number_of_parallel_jobs = args.grid.number_of_projection_jobs,
+            dependencies = deps,
+            **args.grid.projection_queue)
+    deps.append(job_ids['wccn-projection'])
+
+  # train PLDA
+  if not args.skip_train_plda:
+    job_ids['plda-training'] = submitter.submit(
+            '--sub-task train-plda',
+            name = 'train-plda',
+            dependencies = deps,
+            **args.grid.training_queue)
+    deps.append(job_ids['plda-training'])
+ 
+   # train PLDA
+  job_ids['save-projector'] = submitter.submit(
+          '--sub-task save-projector',
+          name = 'save-projector',
+          dependencies = deps,
+          **args.grid.training_queue)
+  deps.append(job_ids['save-projector'])
+         
   return job_ids, deps
 
 
@@ -134,7 +200,7 @@ def execute(args):
 
   # now, check what we can do
   algorithm = tools.base(args.algorithm)
-
+  
   # the file selector object
   fs = tools.FileSelector.instance()
 
@@ -161,7 +227,7 @@ def execute(args):
         clean = args.clean_intermediate,
         force = args.force)
 
-  elif args.sub_task == 'ivector-project':
+  elif args.sub_task == 'ivector-projection':
     tools.ivector_project(
         algorithm,
         indices = base_tools.indices(fs.training_list('projected_gmm', 'train_projector'), args.grid.number_of_projection_jobs),
@@ -172,11 +238,52 @@ def execute(args):
         algorithm,
         force = args.force)
 
-  else:
+  elif args.sub_task == 'whitening-projection':
+    tools.whitening_project(
+        algorithm,
+        indices = base_tools.indices(fs.training_list('projected_gmm', 'train_projector'), args.grid.number_of_projection_jobs),
+        force = args.force)
+
+  elif args.sub_task == 'train-lda':
+    if algorithm.use_lda:
+      tools.train_lda(
+          algorithm,
+          force = args.force)
+
+  elif args.sub_task == 'lda-projection':
+    if algorithm.use_lda:
+      tools.lda_project(
+          algorithm,
+          indices = base_tools.indices(fs.training_list('projected_gmm', 'train_projector'), args.grid.number_of_projection_jobs),
+          force = args.force)
+
+  elif args.sub_task == 'train-wccn':
+    if algorithm.use_wccn:
+      tools.train_wccn(
+          algorithm,
+          force = args.force)
+
+  elif args.sub_task == 'wccn-projection':
+    if algorithm.use_wccn:
+      tools.wccn_project(
+          algorithm,
+          indices = base_tools.indices(fs.training_list('projected_gmm', 'train_projector'), args.grid.number_of_projection_jobs),
+          force = args.force)
+
+  elif args.sub_task == 'train-plda':
+    if algorithm.use_plda:
+      tools.train_plda(
+          algorithm,
+          force = args.force)
+        
+  elif args.sub_task == 'save-projector':
+    tools.save_projector(
+        algorithm,
+        force=args.force)
     # Not our keyword...
+  else:
     return False
   return True
-
 
 
 def verify(args, command_line_parameters, external_fake_job_id = 0):

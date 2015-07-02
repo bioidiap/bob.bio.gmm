@@ -173,9 +173,144 @@ def train_whitener(algorithm, force=False):
     bob.io.base.create_directories_safe(os.path.dirname(fs.whitener_file))
     bob.bio.base.save(algorithm.whitener, fs.whitener_file)
 
-  # finally, save the projector into one file
-  algorithm.load_ubm(fs.ubm_file)
-  algorithm.load_tv(fs.tv_file)
+
+def whitening_project(algorithm, indices, force=False):
+  """Performs IVector projection"""
+  fs = FileSelector.instance()
   algorithm.load_whitener(fs.whitener_file)
-  logger.info("Writing projector into file %s", fs.projector_file)
-  algorithm.save_projector(fs.projector_file)
+
+  ivector_files     = fs.training_list('projected_ivector', 'train_projector')
+  whitened_files = fs.training_list('whitened', 'train_projector')
+
+  logger.info("IVector training: whitening ivectors range (%d, %d) from '%s' to '%s'", indices[0], indices[1], fs.directories['projected_ivector'], fs.directories['whitened'])
+  # extract the features
+  for i in range(indices[0], indices[1]):
+    ivector_file = ivector_files[i]
+    whitened_file = whitened_files[i]
+    if not utils.check_file(whitened_file, force):
+      # load feature
+      ivector = algorithm.read_feature(ivector_file)
+      # project feature
+      whitened = algorithm.project_whitening(ivector)
+      # write it
+      bob.io.base.create_directories_safe(os.path.dirname(whitened_file))
+      bob.bio.base.save(whitened, whitened_file)
+      
+
+def train_lda(algorithm, force=False):
+  """Train the feature projector with the extracted features of the world group."""
+  fs = FileSelector.instance()
+  if utils.check_file(fs.lda_file, force, 1000):
+    logger.info("- LDA projector '%s' already exists.", fs.lda_file)
+  else:
+    train_files = fs.training_list('whitened', 'train_projector', arrange_by_client = True)
+    train_features = [[bob.bio.base.load(filename) for filename in client_files] for client_files in train_files]
+    # perform training
+    algorithm.train_lda(train_features)
+    bob.io.base.create_directories_safe(os.path.dirname(fs.lda_file))
+    bob.bio.base.save(algorithm.lda, fs.lda_file)
+
+def lda_project(algorithm, indices, force=False):
+  """Performs IVector projection"""
+  fs = FileSelector.instance()
+  algorithm.load_lda(fs.lda_file)
+
+  whitened_files = fs.training_list('whitened', 'train_projector')
+  lda_projected_files = fs.training_list('lda_projected', 'train_projector')
+
+  logger.info("IVector training: LDA projection range (%d, %d) from '%s' to '%s'", indices[0], indices[1], fs.directories['whitened'], fs.directories['lda_projected'])
+  # extract the features
+  for i in range(indices[0], indices[1]):
+    ivector_file = whitened_files[i]
+    lda_projected_file = lda_projected_files[i]
+    if not utils.check_file(lda_projected_file, force):
+      # load feature
+      ivector = algorithm.read_feature(ivector_file)
+      # project feature
+      lda_projected = algorithm.project_lda(ivector)
+      # write it
+      bob.io.base.create_directories_safe(os.path.dirname(lda_projected_file))
+      bob.bio.base.save(lda_projected, lda_projected_file)
+      
+
+def train_wccn(algorithm, force=False):
+  """Train the feature projector with the extracted features of the world group."""
+  fs = FileSelector.instance()
+  if utils.check_file(fs.wccn_file, force, 1000):
+    logger.info("- WCCN projector '%s' already exists.", fs.wccn_file)
+  else:
+    if algorithm.use_lda:
+      input_label = 'lda_projected'
+    else:
+      input_label = 'whitened'
+    train_files = fs.training_list(input_label, 'train_projector', arrange_by_client = True)
+    train_features = [[bob.bio.base.load(filename) for filename in client_files] for client_files in train_files]
+    # perform training
+    algorithm.train_wccn(train_features)
+    bob.io.base.create_directories_safe(os.path.dirname(fs.wccn_file))
+    bob.bio.base.save(algorithm.wccn, fs.wccn_file)
+
+def wccn_project(algorithm, indices, force=False):
+  """Performs IVector projection"""
+  fs = FileSelector.instance()
+  algorithm.load_wccn(fs.wccn_file)
+  if algorithm.use_lda:
+    input_label = 'lda_projected'
+  else:
+    input_label = 'whitened'
+
+  input_files = fs.training_list(input_label, 'train_projector')
+  wccn_projected_files = fs.training_list('wccn_projected', 'train_projector')
+
+  logger.info("IVector training: WCCN projection range (%d, %d) from '%s' to '%s'", indices[0], indices[1], fs.directories[input_label], fs.directories['wccn_projected'])
+  # extract the features
+  for i in range(indices[0], indices[1]):
+    ivector_file = input_files[i]
+    wccn_projected_file = wccn_projected_files[i]
+    if not utils.check_file(wccn_projected_file, force):
+      # load feature
+      ivector = algorithm.read_feature(ivector_file)
+      # project feature
+      wccn_projected = algorithm.project_wccn(ivector)
+      # write it
+      bob.io.base.create_directories_safe(os.path.dirname(wccn_projected_file))
+      bob.bio.base.save(wccn_projected, wccn_projected_file)
+      
+
+def train_plda(algorithm, force=False):
+  """Train the feature projector with the extracted features of the world group."""
+  fs = FileSelector.instance()
+  if utils.check_file(fs.plda_file, force, 1000):
+    logger.info("- PLDA projector '%s' already exists.", fs.plda_file)
+  else:
+    if algorithm.use_wccn:
+      input_label = 'wccn_projected'
+    elif algorithm.use_lda:
+      input_label = 'lda_projected'
+    else:
+      input_label = 'whitened'
+    train_files = fs.training_list(input_label, 'train_projector', arrange_by_client = True)
+    train_features = [[bob.bio.base.load(filename) for filename in client_files] for client_files in train_files]
+    # perform training
+    algorithm.train_plda(train_features)
+    bob.io.base.create_directories_safe(os.path.dirname(fs.plda_file))
+    bob.bio.base.save(algorithm.plda_base, fs.plda_file)
+    
+
+def save_projector(algorithm, force=False):
+  fs = FileSelector.instance()
+  if utils.check_file(fs.projector_file, force, 1000):
+    logger.info("- Projector '%s' already exists.", fs.projector_file)
+  else:
+    # save the projector into one file
+    algorithm.load_ubm(fs.ubm_file)
+    algorithm.load_tv(fs.tv_file)
+    algorithm.load_whitener(fs.whitener_file)
+    if algorithm.use_lda:
+      algorithm.load_lda(fs.lda_file)
+    if algorithm.use_wccn:
+      algorithm.load_wccn(fs.wccn_file)
+    if algorithm.use_plda:
+      algorithm.load_plda(fs.plda_file)
+    logger.info("Writing projector into file %s", fs.projector_file)
+    algorithm.save_projector(fs.projector_file)
