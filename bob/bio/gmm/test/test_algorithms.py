@@ -22,7 +22,8 @@ import shutil
 import numpy
 import math
 from nose.plugins.skip import SkipTest
-
+import logging
+logger = logging.getLogger("bob.bio.gmm")
 import pkg_resources
 
 regenerate_refs = False
@@ -328,7 +329,7 @@ def test_jfa():
 
 
 
-def test_ivector():
+def test_ivector_cosine():
   temp_file = bob.io.base.test_utils.temporary_filename()
   ivec1 = bob.bio.base.load_resource("ivector", "algorithm")
   assert isinstance(ivec1, bob.bio.gmm.algorithm.IVector)
@@ -337,7 +338,7 @@ def test_ivector():
   assert ivec1.performs_projection
   assert ivec1.requires_projector_training
   assert ivec1.use_projected_features_for_enrollment
-  assert not ivec1.split_training_features_by_client
+  assert ivec1.split_training_features_by_client
   assert not ivec1.requires_enroller_training
 
   # create smaller IVector object
@@ -350,10 +351,13 @@ def test_ivector():
   )
 
   train_data = utils.random_training_set((100,45), count=5, minimum=-5., maximum=5.)
+  train_data = [train_data]
+
   # reference is the same as for GMM projection
   reference_file = pkg_resources.resource_filename('bob.bio.gmm.test', 'data/ivector_projector.hdf5')
   try:
     # train the projector
+    
     ivec2.train_projector(train_data, temp_file)
 
     assert os.path.exists(temp_file)
@@ -387,3 +391,132 @@ def test_ivector():
   assert abs(ivec1.score(model, probe) - reference_score) < 1e-5, "The scores differ: %3.8f, %3.8f" % (ivec1.score(model, probe), reference_score)
   # TODO: implement that
   assert abs(ivec1.score_for_multiple_probes(model, [probe, probe]) - reference_score) < 1e-5
+  
+  
+  
+def test_ivector_plda():
+  temp_file = bob.io.base.test_utils.temporary_filename()
+  ivec1 = bob.bio.base.load_resource("ivector", "algorithm")
+  ivec1.use_plda = True
+  
+  # create smaller IVector object
+  ivec2 = bob.bio.gmm.algorithm.IVector(
+      number_of_gaussians = 2,
+      subspace_dimension_of_t = 10,
+      kmeans_training_iterations = 1,
+      tv_training_iterations = 1,
+      INIT_SEED = seed_value,
+      use_plda = True,
+      plda_dim_F = 2,
+      plda_dim_G = 2,
+      plda_training_iterations = 2
+      
+  )
+
+  train_data = utils.random_training_set_by_id((100,45), count=5, minimum=-5., maximum=5.)
+  
+  # reference is the same as for GMM projection
+  reference_file = pkg_resources.resource_filename('bob.bio.gmm.test', 'data/ivector2_projector.hdf5')
+  try:
+    # train the projector
+    
+    ivec2.train_projector(train_data, temp_file)
+
+    assert os.path.exists(temp_file)
+
+    if regenerate_refs: shutil.copy(temp_file, reference_file)
+
+    # check projection matrix
+    ivec1.load_projector(reference_file)
+    ivec2.load_projector(temp_file)
+
+    assert ivec1.ubm.is_similar_to(ivec2.ubm)
+    assert ivec1.tv.is_similar_to(ivec2.tv)
+    assert ivec1.whitener.is_similar_to(ivec2.whitener)
+  finally:
+    if os.path.exists(temp_file): os.remove(temp_file)
+
+  # generate and project random feature
+  feature = utils.random_array((20,45), -5., 5., seed=84)
+  projected = ivec1.project(feature)
+  _compare(projected, pkg_resources.resource_filename('bob.bio.gmm.test', 'data/ivector2_projected.hdf5'), ivec1.write_feature, ivec1.read_feature)
+
+  # enroll model from random features
+  random_features = utils.random_training_set((20,45), count=5, minimum=-5., maximum=5.)
+  enroll_features = [ivec1.project(feature) for feature in random_features]
+
+  model = ivec1.enroll(enroll_features)
+  _compare(model, pkg_resources.resource_filename('bob.bio.gmm.test', 'data/ivector2_model.hdf5'), ivec1.write_model, ivec1.read_model)
+
+  # compare model with probe
+  probe = ivec1.read_probe(pkg_resources.resource_filename('bob.bio.gmm.test', 'data/ivector2_projected.hdf5'))
+  logger.info("%f" %ivec1.score(model, probe)) 
+  reference_score = 1.21879822
+  assert abs(ivec1.score(model, probe) - reference_score) < 1e-5, "The scores differ: %3.8f, %3.8f" % (ivec1.score(model, probe), reference_score)
+  assert abs(ivec1.score_for_multiple_probes(model, [probe, probe]) - reference_score) < 1e-5
+
+
+def test_ivector_lda_wccn_plda():
+  temp_file = bob.io.base.test_utils.temporary_filename()
+  ivec1 = bob.bio.base.load_resource("ivector", "algorithm")
+  ivec1.use_lda = True
+  ivec1.use_wccn = True
+  ivec1.use_plda = True
+  # create smaller IVector object
+  ivec2 = bob.bio.gmm.algorithm.IVector(
+      number_of_gaussians = 2,
+      subspace_dimension_of_t = 10,
+      kmeans_training_iterations = 1,
+      tv_training_iterations = 1,
+      INIT_SEED = seed_value,
+      use_lda = True,
+      lda_dim = 3,
+      use_wccn = True,
+      use_plda = True,
+      plda_dim_F = 2,
+      plda_dim_G = 2,
+      plda_training_iterations = 2
+      
+  )
+
+  train_data = utils.random_training_set_by_id((100,45), count=5, minimum=-5., maximum=5.)
+  
+  # reference is the same as for GMM projection
+  reference_file = pkg_resources.resource_filename('bob.bio.gmm.test', 'data/ivector3_projector.hdf5')
+  try:
+    # train the projector
+    
+    ivec2.train_projector(train_data, temp_file)
+
+    assert os.path.exists(temp_file)
+
+    if regenerate_refs: shutil.copy(temp_file, reference_file)
+
+    # check projection matrix
+    ivec1.load_projector(reference_file)
+    ivec2.load_projector(temp_file)
+
+    assert ivec1.ubm.is_similar_to(ivec2.ubm)
+    assert ivec1.tv.is_similar_to(ivec2.tv)
+    assert ivec1.whitener.is_similar_to(ivec2.whitener)
+  finally:
+    if os.path.exists(temp_file): os.remove(temp_file)
+
+  # generate and project random feature
+  feature = utils.random_array((20,45), -5., 5., seed=84)
+  projected = ivec1.project(feature)
+  _compare(projected, pkg_resources.resource_filename('bob.bio.gmm.test', 'data/ivector3_projected.hdf5'), ivec1.write_feature, ivec1.read_feature)
+
+  # enroll model from random features
+  random_features = utils.random_training_set((20,45), count=5, minimum=-5., maximum=5.)
+  enroll_features = [ivec1.project(feature) for feature in random_features]
+  model = ivec1.enroll(enroll_features)
+  _compare(model, pkg_resources.resource_filename('bob.bio.gmm.test', 'data/ivector3_model.hdf5'), ivec1.write_model, ivec1.read_model)
+
+  # compare model with probe
+  probe = ivec1.read_probe(pkg_resources.resource_filename('bob.bio.gmm.test', 'data/ivector3_projected.hdf5'))
+  reference_score = 0.338051
+  assert abs(ivec1.score(model, probe) - reference_score) < 1e-5, "The scores differ: %3.8f, %3.8f" % (ivec1.score(model, probe), reference_score)
+  assert abs(ivec1.score_for_multiple_probes(model, [probe, probe]) - reference_score) < 1e-5
+
+    
