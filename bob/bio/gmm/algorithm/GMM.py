@@ -253,6 +253,7 @@ class GMMRegular (GMM):
 
   def train_enroller(self, train_features, enroller_file):
     """Computes the Universal Background Model from the training ("world") data"""
+    train_features = [feature for client in train_features for feature in client]
     return self.train_projector(train_features, enroller_file)
 
 

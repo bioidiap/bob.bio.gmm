@@ -124,6 +124,7 @@ setup(
         'jfa                                = bob.bio.gmm.config.algorithm.jfa:algorithm',
         'isv                                = bob.bio.gmm.config.algorithm.isv:algorithm',
         'ivector-cosine             = bob.bio.gmm.config.algorithm.ivector_cosine:algorithm',
+        'ivector-plda                = bob.bio.gmm.config.algorithm.ivector_plda:algorithm',
         'ivector-lda-wccn-plda = bob.bio.gmm.config.algorithm.ivector_lda_wccn_plda:algorithm',
       ],
    },

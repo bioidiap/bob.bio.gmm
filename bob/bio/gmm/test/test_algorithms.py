@@ -148,8 +148,8 @@ def test_gmm_regular():
   train_data = utils.random_training_set((100,45), count=5, minimum=-5., maximum=5.)
   reference_file = pkg_resources.resource_filename('bob.bio.gmm.test', 'data/gmm_projector.hdf5')
   try:
-    # train the projector
-    gmm2.train_enroller(train_data, temp_file)
+    # train the enroler
+    gmm2.train_enroller([train_data], temp_file)
 
     assert os.path.exists(temp_file)
 
@@ -331,7 +331,7 @@ def test_jfa():
 
 def test_ivector_cosine():
   temp_file = bob.io.base.test_utils.temporary_filename()
-  ivec1 = bob.bio.base.load_resource("ivector", "algorithm")
+  ivec1 = bob.bio.base.load_resource("ivector-cosine", "algorithm")
   assert isinstance(ivec1, bob.bio.gmm.algorithm.IVector)
   assert isinstance(ivec1, bob.bio.gmm.algorithm.GMM)
   assert isinstance(ivec1, bob.bio.base.algorithm.Algorithm)
@@ -396,7 +396,7 @@ def test_ivector_cosine():
   
 def test_ivector_plda():
   temp_file = bob.io.base.test_utils.temporary_filename()
-  ivec1 = bob.bio.base.load_resource("ivector", "algorithm")
+  ivec1 = bob.bio.base.load_resource("ivector-plda", "algorithm")
   ivec1.use_plda = True
   
   # create smaller IVector object
@@ -458,7 +458,7 @@ def test_ivector_plda():
 
 def test_ivector_lda_wccn_plda():
   temp_file = bob.io.base.test_utils.temporary_filename()
-  ivec1 = bob.bio.base.load_resource("ivector", "algorithm")
+  ivec1 = bob.bio.base.load_resource("ivector-lda-wccn-plda", "algorithm")
   ivec1.use_lda = True
   ivec1.use_wccn = True
   ivec1.use_plda = True
