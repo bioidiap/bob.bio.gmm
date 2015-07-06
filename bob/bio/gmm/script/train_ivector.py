@@ -27,7 +27,6 @@ def main(command_line_parameters = None):
     args.skip_score_computation = True
     args.skip_concatenation = True
     args.skip_calibration = True
-    print(args)
 
     # perform face verification test
     verify_ivector.verify(args, command_line_parameters)
