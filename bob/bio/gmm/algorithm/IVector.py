@@ -24,6 +24,7 @@ class IVector (GMM):
       subspace_dimension_of_t,       # T subspace dimension
       tv_training_iterations = 25,   # Number of EM iterations for the JFA training
       update_sigma = True,
+      use_whitening = True,
       use_lda = False,
       use_wccn = False,
       use_plda = False,
@@ -49,6 +50,7 @@ class IVector (GMM):
         subspace_dimension_of_t = subspace_dimension_of_t,
         tv_training_iterations = tv_training_iterations,
         update_sigma = update_sigma,
+        use_whitening = use_whitening,
         use_lda = use_lda,
         use_wccn = use_wccn,
         use_plda = use_plda,
@@ -63,6 +65,7 @@ class IVector (GMM):
     )
 
     self.update_sigma = update_sigma
+    self.use_whitening = use_whitening
     self.use_lda = use_lda
     self.use_wccn = use_wccn
     self.use_plda = use_plda
@@ -150,11 +153,11 @@ class IVector (GMM):
     train_ivectors = [[self.project_ivector(stats) for stats in client] for client in train_gmm_stats]
     train_ivectors_flatten = [stats for client in train_ivectors for stats in client]
 
-    # Train Whitening
-    self.train_whitener(train_ivectors_flatten)
-    
-    # whitening and length-normalizing i-vectors
-    train_ivectors = [[self.project_whitening(ivec) for ivec in client] for client in train_ivectors]
+    if self.use_whitening:
+      # Train Whitening
+      self.train_whitener(train_ivectors_flatten)
+      # whitening and length-normalizing i-vectors
+      train_ivectors = [[self.project_whitening(ivec) for ivec in client] for client in train_ivectors]
     
     if self.use_lda:
       self.train_lda(train_ivectors)
@@ -183,10 +186,11 @@ class IVector (GMM):
     hdf5file.cd('Enroller')
     self.tv.save(hdf5file)
 
-    hdf5file.cd('/')
-    hdf5file.create_group('Whitener')
-    hdf5file.cd('Whitener')
-    self.whitener.save(hdf5file)
+    if self.use_whitening:
+      hdf5file.cd('/')
+      hdf5file.create_group('Whitener')
+      hdf5file.cd('Whitener')
+      self.whitener.save(hdf5file)
     
     if self.use_lda:
       hdf5file.cd('/')
@@ -242,9 +246,10 @@ class IVector (GMM):
     hdf5file.cd('/Enroller')
     self.load_tv(hdf5file)
 
-    # Load Whitening
-    hdf5file.cd('/Whitener')
-    self.load_whitener(hdf5file)
+    if self.use_whitening:
+      # Load Whitening
+      hdf5file.cd('/Whitener')
+      self.load_whitener(hdf5file)
     
     if self.use_lda:
       # Load LDA
@@ -289,7 +294,8 @@ class IVector (GMM):
     # project I-Vector
     ivector = self.project_ivector(projected_ubm)
     # whiten I-Vector
-    ivector = self.project_whitening(ivector)
+    if self.use_whitening:
+      ivector = self.project_whitening(ivector)
     # LDA projection
     if self.use_lda:
       ivector = self.project_lda(ivector)
