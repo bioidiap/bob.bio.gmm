@@ -121,7 +121,7 @@ def kmeans_mstep(algorithm, iteration, number_of_parallel_jobs, force=False, cle
       filenames = []
       for job in range(number_of_parallel_jobs):
         job_indices = tools.indices(training_list, number_of_parallel_jobs, job+1)
-        if job_indices[-1] >= job_indices[0]:
+        if job_indices[-1] > job_indices[0]:
           filenames.append(fs.kmeans_stats_file(iteration, job_indices[0], job_indices[-1]))
       statistics = _accumulate(filenames)
 
@@ -247,7 +247,7 @@ def gmm_mstep(algorithm, iteration, number_of_parallel_jobs, force=False, clean=
       stats_files = []
       for job in range(number_of_parallel_jobs):
         job_indices = tools.indices(training_list, number_of_parallel_jobs, job+1)
-        if job_indices[-1] >= job_indices[0]:
+        if job_indices[-1] > job_indices[0]:
           stats_files.append(fs.gmm_stats_file(iteration, job_indices[0], job_indices[-1]))
 
       # read all stats files
