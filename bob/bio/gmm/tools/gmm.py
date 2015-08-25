@@ -207,7 +207,7 @@ def gmm_estep(algorithm, extractor, iteration, indices, force=False):
     last_machine_file = fs.gmm_intermediate_file(iteration)
     gmm_machine = bob.learn.em.GMMMachine(bob.io.base.HDF5File(last_machine_file))
 
-    logger.info("UBM training: GMM E-Step from range(%d, %d)", indices)
+    logger.info("UBM training: GMM E-Step from range(%d, %d)", *indices)
 
     # read data
     data = numpy.vstack([read_feature(extractor, training_list[index]) for index in range(indices[0], indices[1])])
