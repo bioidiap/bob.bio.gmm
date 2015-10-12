@@ -69,7 +69,7 @@ def test_gmm_sequential():
       '-e', 'dummy2d',
       '-a', 'bob.bio.gmm.algorithm.GMM(2, 2, 2)',
       '--zt-norm',
-      '-s', 'test_gmm_sequential',
+      '-vs', 'test_gmm_sequential',
       '--temp-directory', test_dir,
       '--result-directory', test_dir
   ]
@@ -93,7 +93,7 @@ def test_gmm_parallel():
       '-g', 'bob.bio.base.grid.Grid(grid_type = "local", number_of_parallel_processes = 2, scheduler_sleep_time = 0.1)', '-G', test_database, '--run-local-scheduler', '--stop-on-failure',
       '--clean-intermediate',
       '--zt-norm',
-      '-s', 'test_gmm_parallel',
+      '-vs', 'test_gmm_parallel',
       '--temp-directory', test_dir,
       '--result-directory', test_dir,
   ]
@@ -112,7 +112,7 @@ def test_isv_sequential():
       '-e', 'dummy2d',
       '-a', 'bob.bio.gmm.algorithm.ISV(10, number_of_gaussians=2, kmeans_training_iterations=2, gmm_training_iterations=2, isv_training_iterations=2)',
       '--zt-norm',
-      '-s', 'test_isv_sequential',
+      '-vs', 'test_isv_sequential',
       '--temp-directory', test_dir,
       '--result-directory', test_dir
   ]
@@ -136,7 +136,7 @@ def test_isv_parallel():
       '-g', 'bob.bio.base.grid.Grid(grid_type = "local", number_of_parallel_processes = 2, scheduler_sleep_time = 0.1)', '-G', test_database, '--run-local-scheduler', '--stop-on-failure',
       '--clean-intermediate',
       '--zt-norm',
-      '-s', 'test_isv_parallel',
+      '-vs', 'test_isv_parallel',
       '--temp-directory', test_dir,
       '--result-directory', test_dir,
   ]
@@ -155,7 +155,7 @@ def test_ivector_cosine_sequential():
       '-e', 'dummy2d',
       '-a', 'bob.bio.gmm.algorithm.IVector(10, number_of_gaussians=2, kmeans_training_iterations=2, gmm_training_iterations=2, tv_training_iterations=2)',
       '--zt-norm',
-      '-s', 'test_ivector_cosine_sequential',
+      '-vs', 'test_ivector_cosine_sequential',
       '--temp-directory', test_dir,
       '--result-directory', test_dir
   ]
@@ -177,7 +177,7 @@ def test_ivector_cosine_parallel():
       '-g', 'bob.bio.base.grid.Grid(grid_type = "local", number_of_parallel_processes = 2, scheduler_sleep_time = 0.1)', '-G', test_database, '--run-local-scheduler', '--stop-on-failure',
       '--clean-intermediate',
       '--zt-norm',
-      '-s', 'test_ivector_cosine_parallel',
+      '-vs', 'test_ivector_cosine_parallel',
       '--temp-directory', test_dir,
       '--result-directory', test_dir
   ]
@@ -193,7 +193,7 @@ def test_ivector_lda_wccn_plda_sequential():
       '-e', 'dummy2d',
       '-a', 'bob.bio.gmm.algorithm.IVector(10, number_of_gaussians=2, kmeans_training_iterations=2, gmm_training_iterations=2, tv_training_iterations=2, use_lda=True, use_wccn=True, use_plda=True, lda_dim=2, plda_dim_F=2, plda_dim_G=2, plda_training_iterations=2)',
       '--zt-norm',
-      '-s', 'test_ivector_lda_wccn_plda_sequential',
+      '-vs', 'test_ivector_lda_wccn_plda_sequential',
       '--temp-directory', test_dir,
       '--result-directory', test_dir
   ]
@@ -215,11 +215,9 @@ def test_ivector_lda_wccn_plda_parallel():
       '-g', 'bob.bio.base.grid.Grid(grid_type = "local", number_of_parallel_processes = 2, scheduler_sleep_time = 0.1)', '-G', test_database, '--run-local-scheduler', '--stop-on-failure',
       '--clean-intermediate',
       '--zt-norm',
-      '-s', 'test_ivector_lda_wccn_plda_parallel',
+      '-vs', 'test_ivector_lda_wccn_plda_parallel',
       '--temp-directory', test_dir,
       '--result-directory', test_dir
   ]
   print (bob.bio.base.tools.command_line(parameters))
   _verify(parameters, test_dir, 'test_ivector_lda_wccn_plda_parallel', executable=main, ref_modifier='-ivector-lda-wccn-plda')
-
-  
