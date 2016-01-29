@@ -71,7 +71,7 @@ def _compare_complex(data, reference, write_function = bob.bio.base.save, read_f
 
 def test_gmm():
   temp_file = bob.io.base.test_utils.temporary_filename()
-  gmm1 = bob.bio.base.load_resource("gmm", "algorithm")
+  gmm1 = bob.bio.base.load_resource("gmm", "algorithm", preferred_package='bob.bio.gmm')
   assert isinstance(gmm1, bob.bio.gmm.algorithm.GMM)
   assert isinstance(gmm1, bob.bio.base.algorithm.Algorithm)
   assert gmm1.performs_projection
@@ -128,7 +128,7 @@ def test_gmm():
 def test_gmm_regular():
 
   temp_file = bob.io.base.test_utils.temporary_filename()
-  gmm1 = bob.bio.base.load_resource("gmm-regular", "algorithm")
+  gmm1 = bob.bio.base.load_resource("gmm-regular", "algorithm", preferred_package='bob.bio.gmm')
   assert isinstance(gmm1, bob.bio.gmm.algorithm.GMMRegular)
   assert isinstance(gmm1, bob.bio.gmm.algorithm.GMM)
   assert isinstance(gmm1, bob.bio.base.algorithm.Algorithm)
@@ -181,7 +181,7 @@ def test_gmm_regular():
 
 def test_isv():
   temp_file = bob.io.base.test_utils.temporary_filename()
-  isv1 = bob.bio.base.load_resource("isv", "algorithm")
+  isv1 = bob.bio.base.load_resource("isv", "algorithm", preferred_package='bob.bio.gmm')
   assert isinstance(isv1, bob.bio.gmm.algorithm.ISV)
   assert isinstance(isv1, bob.bio.gmm.algorithm.GMM)
   assert isinstance(isv1, bob.bio.base.algorithm.Algorithm)
@@ -247,7 +247,7 @@ def test_isv():
 
 def test_jfa():
   temp_file = bob.io.base.test_utils.temporary_filename()
-  jfa1 = bob.bio.base.load_resource("jfa", "algorithm")
+  jfa1 = bob.bio.base.load_resource("jfa", "algorithm", preferred_package='bob.bio.gmm')
   assert isinstance(jfa1, bob.bio.gmm.algorithm.JFA)
   assert isinstance(jfa1, bob.bio.gmm.algorithm.GMM)
   assert isinstance(jfa1, bob.bio.base.algorithm.Algorithm)
@@ -331,7 +331,7 @@ def test_jfa():
 
 def test_ivector_cosine():
   temp_file = bob.io.base.test_utils.temporary_filename()
-  ivec1 = bob.bio.base.load_resource("ivector-cosine", "algorithm")
+  ivec1 = bob.bio.base.load_resource("ivector-cosine", "algorithm", preferred_package='bob.bio.gmm')
   assert isinstance(ivec1, bob.bio.gmm.algorithm.IVector)
   assert isinstance(ivec1, bob.bio.gmm.algorithm.GMM)
   assert isinstance(ivec1, bob.bio.base.algorithm.Algorithm)
@@ -357,7 +357,7 @@ def test_ivector_cosine():
   reference_file = pkg_resources.resource_filename('bob.bio.gmm.test', 'data/ivector_projector.hdf5')
   try:
     # train the projector
-    
+
     ivec2.train_projector(train_data, temp_file)
 
     assert os.path.exists(temp_file)
@@ -391,14 +391,14 @@ def test_ivector_cosine():
   assert abs(ivec1.score(model, probe) - reference_score) < 1e-5, "The scores differ: %3.8f, %3.8f" % (ivec1.score(model, probe), reference_score)
   # TODO: implement that
   assert abs(ivec1.score_for_multiple_probes(model, [probe, probe]) - reference_score) < 1e-5
-  
-  
-  
+
+
+
 def test_ivector_plda():
   temp_file = bob.io.base.test_utils.temporary_filename()
-  ivec1 = bob.bio.base.load_resource("ivector-plda", "algorithm")
+  ivec1 = bob.bio.base.load_resource("ivector-plda", "algorithm", preferred_package='bob.bio.gmm')
   ivec1.use_plda = True
-  
+
   # create smaller IVector object
   ivec2 = bob.bio.gmm.algorithm.IVector(
       number_of_gaussians = 2,
@@ -410,16 +410,16 @@ def test_ivector_plda():
       plda_dim_F = 2,
       plda_dim_G = 2,
       plda_training_iterations = 2
-      
+
   )
 
   train_data = utils.random_training_set_by_id((100,45), count=5, minimum=-5., maximum=5.)
-  
+
   # reference is the same as for GMM projection
   reference_file = pkg_resources.resource_filename('bob.bio.gmm.test', 'data/ivector2_projector.hdf5')
   try:
     # train the projector
-    
+
     ivec2.train_projector(train_data, temp_file)
 
     assert os.path.exists(temp_file)
@@ -450,7 +450,7 @@ def test_ivector_plda():
 
   # compare model with probe
   probe = ivec1.read_probe(pkg_resources.resource_filename('bob.bio.gmm.test', 'data/ivector2_projected.hdf5'))
-  logger.info("%f" %ivec1.score(model, probe)) 
+  logger.info("%f" %ivec1.score(model, probe))
   reference_score = 1.21879822
   assert abs(ivec1.score(model, probe) - reference_score) < 1e-5, "The scores differ: %3.8f, %3.8f" % (ivec1.score(model, probe), reference_score)
   assert abs(ivec1.score_for_multiple_probes(model, [probe, probe]) - reference_score) < 1e-5
@@ -458,7 +458,7 @@ def test_ivector_plda():
 
 def test_ivector_lda_wccn_plda():
   temp_file = bob.io.base.test_utils.temporary_filename()
-  ivec1 = bob.bio.base.load_resource("ivector-lda-wccn-plda", "algorithm")
+  ivec1 = bob.bio.base.load_resource("ivector-lda-wccn-plda", "algorithm", preferred_package='bob.bio.gmm')
   ivec1.use_lda = True
   ivec1.use_wccn = True
   ivec1.use_plda = True
@@ -476,16 +476,16 @@ def test_ivector_lda_wccn_plda():
       plda_dim_F = 2,
       plda_dim_G = 2,
       plda_training_iterations = 2
-      
+
   )
 
   train_data = utils.random_training_set_by_id((100,45), count=5, minimum=-5., maximum=5.)
-  
+
   # reference is the same as for GMM projection
   reference_file = pkg_resources.resource_filename('bob.bio.gmm.test', 'data/ivector3_projector.hdf5')
   try:
     # train the projector
-    
+
     ivec2.train_projector(train_data, temp_file)
 
     assert os.path.exists(temp_file)
@@ -518,5 +518,3 @@ def test_ivector_lda_wccn_plda():
   reference_score = 0.338051
   assert abs(ivec1.score(model, probe) - reference_score) < 1e-5, "The scores differ: %3.8f, %3.8f" % (ivec1.score(model, probe), reference_score)
   assert abs(ivec1.score_for_multiple_probes(model, [probe, probe]) - reference_score) < 1e-5
-
-    

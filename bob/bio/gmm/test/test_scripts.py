@@ -71,7 +71,8 @@ def test_gmm_sequential():
       '--zt-norm',
       '-vs', 'test_gmm_sequential',
       '--temp-directory', test_dir,
-      '--result-directory', test_dir
+      '--result-directory', test_dir,
+      '--preferred-package', 'bob.bio.gmm'
   ]
 
   print (bob.bio.base.tools.command_line(parameters))
@@ -96,6 +97,7 @@ def test_gmm_parallel():
       '-vs', 'test_gmm_parallel',
       '--temp-directory', test_dir,
       '--result-directory', test_dir,
+      '--preferred-package', 'bob.bio.gmm'
   ]
 
   print (bob.bio.base.tools.command_line(parameters))
@@ -114,7 +116,8 @@ def test_isv_sequential():
       '--zt-norm',
       '-vs', 'test_isv_sequential',
       '--temp-directory', test_dir,
-      '--result-directory', test_dir
+      '--result-directory', test_dir,
+      '--preferred-package', 'bob.bio.gmm'
   ]
 
   print (bob.bio.base.tools.command_line(parameters))
@@ -139,6 +142,7 @@ def test_isv_parallel():
       '-vs', 'test_isv_parallel',
       '--temp-directory', test_dir,
       '--result-directory', test_dir,
+      '--preferred-package', 'bob.bio.gmm'
   ]
 
   print (bob.bio.base.tools.command_line(parameters))
@@ -157,7 +161,8 @@ def test_ivector_cosine_sequential():
       '--zt-norm',
       '-vs', 'test_ivector_cosine_sequential',
       '--temp-directory', test_dir,
-      '--result-directory', test_dir
+      '--result-directory', test_dir,
+      '--preferred-package', 'bob.bio.gmm'
   ]
   print (bob.bio.base.tools.command_line(parameters))
   _verify(parameters, test_dir, 'test_ivector_cosine_sequential', ref_modifier='-ivector-cosine')
@@ -179,7 +184,8 @@ def test_ivector_cosine_parallel():
       '--zt-norm',
       '-vs', 'test_ivector_cosine_parallel',
       '--temp-directory', test_dir,
-      '--result-directory', test_dir
+      '--result-directory', test_dir,
+      '--preferred-package', 'bob.bio.gmm'
   ]
   print (bob.bio.base.tools.command_line(parameters))
   _verify(parameters, test_dir, 'test_ivector_cosine_parallel', executable=main, ref_modifier='-ivector-cosine')
@@ -217,7 +223,8 @@ def test_ivector_lda_wccn_plda_parallel():
       '--zt-norm',
       '-vs', 'test_ivector_lda_wccn_plda_parallel',
       '--temp-directory', test_dir,
-      '--result-directory', test_dir
+      '--result-directory', test_dir,
+      '--preferred-package', 'bob.bio.gmm'
   ]
   print (bob.bio.base.tools.command_line(parameters))
   _verify(parameters, test_dir, 'test_ivector_lda_wccn_plda_parallel', executable=main, ref_modifier='-ivector-lda-wccn-plda')
