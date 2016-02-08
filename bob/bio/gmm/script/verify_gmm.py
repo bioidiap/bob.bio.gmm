@@ -23,9 +23,6 @@ def parse_arguments(command_line_parameters, exclude_resources_from = []):
   tools.add_parallel_gmm_options(parsers)
 
   # override some parameters
-  parsers['config'].add_argument('-g', '--grid', metavar = 'x', nargs = '+', required=True,
-    help = 'Configuration for the grid setup; required for the parallel execution script.')
-
   parsers['config'].add_argument('-a', '--algorithm', metavar = 'x', nargs = '+', default = ['gmm'],
       help = 'Face recognition; only GMM-related algorithms are allowed')
 
@@ -48,6 +45,9 @@ def parse_arguments(command_line_parameters, exclude_resources_from = []):
   args = base_tools.initialize(parsers, command_line_parameters,
       skips = ['preprocessing', 'extractor-training', 'extraction', 'normalization', 'kmeans', 'gmm', 'projection', 'enroller-training', 'enrollment', 'score-computation', 'concatenation', 'calibration']
   )
+
+  if args.grid is None and args.parallel is None:
+    raise ValueError("To be able to run the parallelized ISV script, either the --grid or the --parallel option need to be specified!")
 
   args.skip_projector_training = True
 

@@ -1,6 +1,7 @@
 from . import algorithm
 from . import tools
 from . import test
+from . import script
 
 
 def get_config():
