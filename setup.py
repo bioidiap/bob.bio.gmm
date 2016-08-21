@@ -49,7 +49,7 @@ setup(
     version = open("version.txt").read().rstrip(),
     description = 'Tools for running biometric recognition experiments using GMM-based approximation',
 
-    url = 'https://www.github.com/bioidiap/bob.bio.gmm',
+    url = 'https://www.gitlab.idiap.ch/bob/bob.bio.gmm',
     license = 'GPLv3',
     author = '<YourName>',
     author_email = '<YourEmail>',
