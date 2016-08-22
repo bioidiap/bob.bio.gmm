@@ -50,7 +50,7 @@ setup(
     description = 'Tools for running biometric recognition experiments using GMM-based approximation',
 
     url = 'https://www.gitlab.idiap.ch/bob/bob.bio.gmm',
-    license = 'GPLv3',
+    license = 'BSD',
     author = '<YourName>',
     author_email = '<YourEmail>',
     keywords = 'bob, biometric recognition, evaluation',
@@ -137,7 +137,7 @@ setup(
       'Framework :: Bob',
       'Development Status :: 3 - Alpha',
       'Intended Audience :: Developers',
-      'License :: OSI Approved :: GNU General Public License v3 (GPLv3)',
+      'License :: OSI Approved :: BSD License',
       'Natural Language :: English',
       'Programming Language :: Python',
       'Topic :: Scientific/Engineering :: Artificial Intelligence',

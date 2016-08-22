@@ -10,8 +10,6 @@ bob.sp
 bob.learn.em
 bob.measure
 bob.db.base
-bob.db.verification.utils
-bob.db.verification.filelist
 bob.db.atnt  # for test purposes
 bob.io.image # for test purposes
 bob.bio.base
