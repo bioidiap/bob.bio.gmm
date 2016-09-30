@@ -58,6 +58,13 @@ def parse_arguments(command_line_parameters, exclude_resources_from = []):
   if tools.base(args.algorithm).__class__ not in (algorithm.GMM, algorithm.GMMRegular):
     raise ValueError("The given algorithm %s is not a (pure) GMM algorithm" % type(args.algorithm))
 
+  # check if one of the parameters is given wothout the sub-task
+  if args.sub_task is None:
+    if args.iteration is not None: raise ValueError("The option --iteration is an internal option and cannot be used to define experiments")
+    if args.model_type is not None: raise ValueError("The option --model-type is an internal option and cannot be used to define experiments")
+    if args.score_type is not None: raise ValueError("The option --score-type is an internal option and cannot be used to define experiments")
+    if args.group is not None: raise ValueError("The option --group is an internal option and cannot be used to define experiments; did you mean to use --groups?")
+
   return args
 
 def add_gmm_jobs(args, job_ids, deps, submitter):

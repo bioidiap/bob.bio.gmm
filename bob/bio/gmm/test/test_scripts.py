@@ -1,11 +1,10 @@
-from __future__ import print_function
-
 import bob.measure
 
 import os
 import shutil
 import tempfile
 import numpy
+import nose
 
 import bob.io.image
 import bob.bio.base
@@ -75,8 +74,6 @@ def test_gmm_sequential():
       '--preferred-package', 'bob.bio.gmm'
   ]
 
-  print (bob.bio.base.tools.command_line(parameters))
-
   _verify(parameters, test_dir, 'test_gmm_sequential', ref_modifier='-gmm')
 
 
@@ -100,8 +97,6 @@ def test_gmm_parallel():
       '--preferred-package', 'bob.bio.gmm'
   ]
 
-  print (bob.bio.base.tools.command_line(parameters))
-
   _verify(parameters, test_dir, 'test_gmm_parallel', executable=main, ref_modifier='-gmm')
 
 
@@ -119,8 +114,6 @@ def test_isv_sequential():
       '--result-directory', test_dir,
       '--preferred-package', 'bob.bio.gmm'
   ]
-
-  print (bob.bio.base.tools.command_line(parameters))
 
   _verify(parameters, test_dir, 'test_isv_sequential', ref_modifier='-isv')
 
@@ -145,8 +138,6 @@ def test_isv_parallel():
       '--preferred-package', 'bob.bio.gmm'
   ]
 
-  print (bob.bio.base.tools.command_line(parameters))
-
   _verify(parameters, test_dir, 'test_isv_parallel', executable=main, ref_modifier='-isv')
 
 
@@ -164,7 +155,7 @@ def test_ivector_cosine_sequential():
       '--result-directory', test_dir,
       '--preferred-package', 'bob.bio.gmm'
   ]
-  print (bob.bio.base.tools.command_line(parameters))
+
   _verify(parameters, test_dir, 'test_ivector_cosine_sequential', ref_modifier='-ivector-cosine')
 
 
@@ -187,7 +178,7 @@ def test_ivector_cosine_parallel():
       '--result-directory', test_dir,
       '--preferred-package', 'bob.bio.gmm'
   ]
-  print (bob.bio.base.tools.command_line(parameters))
+
   _verify(parameters, test_dir, 'test_ivector_cosine_parallel', executable=main, ref_modifier='-ivector-cosine')
 
 def test_ivector_lda_wccn_plda_sequential():
@@ -203,7 +194,7 @@ def test_ivector_lda_wccn_plda_sequential():
       '--temp-directory', test_dir,
       '--result-directory', test_dir
   ]
-  print (bob.bio.base.tools.command_line(parameters))
+
   _verify(parameters, test_dir, 'test_ivector_lda_wccn_plda_sequential', ref_modifier='-ivector-lda-wccn-plda')
 
 
@@ -226,5 +217,39 @@ def test_ivector_lda_wccn_plda_parallel():
       '--result-directory', test_dir,
       '--preferred-package', 'bob.bio.gmm'
   ]
-  print (bob.bio.base.tools.command_line(parameters))
+
   _verify(parameters, test_dir, 'test_ivector_lda_wccn_plda_parallel', executable=main, ref_modifier='-ivector-lda-wccn-plda')
+
+
+def test_internal_raises():
+  test_dir = tempfile.mkdtemp(prefix='bobtest_')
+  test_database = os.path.join(test_dir, "submitted.sql3")
+  # define dummy parameters
+  parameters = [
+      '-d', 'dummy',
+      '-p', 'dummy',
+      '-e', 'dummy2d',
+      '-g', 'bob.bio.base.grid.Grid(grid_type = "local", number_of_parallel_processes = 2, scheduler_sleep_time = 0.1)', '-G', test_database, '--run-local-scheduler', '--stop-on-failure',
+      '--import', 'bob.bio.gmm', 'bob.io.image',
+      '--clean-intermediate',
+      '--zt-norm',
+      '-vs', 'test_raises',
+      '--temp-directory', test_dir,
+      '--result-directory', test_dir,
+      '--preferred-package', 'bob.bio.gmm'
+  ]
+
+  from bob.bio.gmm.script.verify_gmm import main as gmm
+  from bob.bio.gmm.script.verify_isv import main as isv
+  from bob.bio.gmm.script.verify_ivector import main as ivector
+
+  for script, algorithm in (
+      (gmm, "bob.bio.gmm.algorithm.GMM(2, 2, 2)"),
+      (isv, "bob.bio.gmm.algorithm.ISV(10, number_of_gaussians=2, kmeans_training_iterations=2, gmm_training_iterations=2, isv_training_iterations=2)"),
+      (ivector, "bob.bio.gmm.algorithm.IVector(10, number_of_gaussians=2, kmeans_training_iterations=2, gmm_training_iterations=2, tv_training_iterations=2, use_lda=True, use_wccn=True, use_plda=True, lda_dim=2, plda_dim_F=2, plda_dim_G=2, plda_training_iterations=2)")):
+
+    for option, value in (("--iteration", "0"), ("--group", "dev"), ("--model-type", "N"), ("--score-type", "A")):
+      internal = parameters + ["--algorithm", algorithm, option, value]
+
+      nose.tools.assert_raises(ValueError, script, internal)
+  shutil.rmtree(test_dir)
