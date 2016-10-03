@@ -1,0 +1,2 @@
+bob.db.atnt  # for test purposes
+bob.io.image # for test purposes

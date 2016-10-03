@@ -10,7 +10,5 @@ bob.sp
 bob.learn.em
 bob.measure
 bob.db.base
-bob.db.atnt  # for test purposes
-bob.io.image # for test purposes
 bob.bio.base
 matplotlib   # for plotting
