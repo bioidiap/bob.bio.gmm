@@ -23,7 +23,7 @@ def parse_arguments(command_line_parameters, exclude_resources_from = []):
   tools.add_parallel_gmm_options(parsers, sub_module = 'ivector')
 
   # override some parameters
-  parsers['config'].add_argument('-a', '--algorithm', metavar = 'x', nargs = '+', default = ['ivector'],
+  parsers['config'].add_argument('-a', '--algorithm', metavar = 'x', nargs = '+', default = ['ivector-cosine'],
       help = 'Face recognition; only GMM-related algorithms are allowed')
 
 
