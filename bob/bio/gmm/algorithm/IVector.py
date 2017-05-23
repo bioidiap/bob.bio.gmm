@@ -133,10 +133,9 @@ class IVector (GMM):
     """Train Projector and Enroller at the same time"""
 
     [self._check_feature(feature) for client in train_features for feature in client]
-    train_features_flatten = [feature for client in train_features for feature in client]
 
     # train UBM
-    data = numpy.vstack(train_features_flatten)
+    data = numpy.vstack(feature for client in train_features for feature in client)
     self.train_ubm(data)
     del data
 

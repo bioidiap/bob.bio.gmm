@@ -3,7 +3,7 @@ import bob.learn.em
 import shutil
 import numpy
 import os
-
+import functools
 import logging
 logger = logging.getLogger("bob.bio.gmm")
 
@@ -24,7 +24,10 @@ def kmeans_initialize(algorithm, extractor, limit_data = None, force = False):
     # read data
     logger.info("UBM training: initializing kmeans")
     training_list = utils.selected_elements(fs.training_list('extracted', 'train_projector'), limit_data)
-    data = numpy.vstack([read_feature(extractor, feature_file) for feature_file in training_list])
+
+    # read the features
+    reader = functools.partial(read_feature, extractor)
+    data = utils.vstack_features(reader, training_list)
 
     # Perform KMeans initialization
     kmeans_machine = bob.learn.em.KMeansMachine(algorithm.gaussians, data.shape[1])
@@ -55,8 +58,11 @@ def kmeans_estep(algorithm, extractor, iteration, indices, force=False):
 
     logger.info("UBM training: KMeans E-Step round %d from range(%d, %d)", iteration, *indices)
 
-    # read data
-    data = numpy.vstack([read_feature(extractor, training_list[index]) for index in range(indices[0], indices[1])])
+    # read the features
+    reader = functools.partial(read_feature, extractor)
+    data = utils.vstack_features(
+        reader,
+        (training_list[index] for index in range(indices[0], indices[1])))
 
     # Performs the E-step
     trainer = algorithm.kmeans_trainer
@@ -168,9 +174,11 @@ def gmm_initialize(algorithm, extractor, limit_data = None, force = False):
   else:
     logger.info("UBM Training: Initializing GMM")
 
-    # read features
     training_list = utils.selected_elements(fs.training_list('extracted', 'train_projector'), limit_data)
-    data = numpy.vstack([read_feature(extractor, feature_file) for feature_file in training_list])
+
+    # read the features
+    reader = functools.partial(read_feature, extractor)
+    data = utils.vstack_features(reader, training_list)
 
     # get means and variances of kmeans result
     kmeans_machine = bob.learn.em.KMeansMachine(bob.io.base.HDF5File(fs.kmeans_file))
@@ -209,8 +217,12 @@ def gmm_estep(algorithm, extractor, iteration, indices, force=False):
 
     logger.info("UBM training: GMM E-Step from range(%d, %d)", *indices)
 
-    # read data
-    data = numpy.vstack([read_feature(extractor, training_list[index]) for index in range(indices[0], indices[1])])
+    # read the features
+    reader = functools.partial(read_feature, extractor)
+    data = utils.vstack_features(
+        reader,
+        (training_list[index] for index in range(indices[0], indices[1])))
+
     trainer = algorithm.ubm_trainer
     trainer.initialize(gmm_machine, None)
 

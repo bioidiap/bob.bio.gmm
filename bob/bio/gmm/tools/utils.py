@@ -69,7 +69,7 @@ def read_feature(extractor, feature_file):
     import bob.bio.video
     if isinstance(extractor, bob.bio.video.extractor.Wrapper):
       assert isinstance(feature, bob.bio.video.FrameContainer)
-      return numpy.vstack([frame for _,frame,_ in feature])
+      return numpy.vstack(frame for _, frame, _ in feature)
   except ImportError:
     pass
   return feature

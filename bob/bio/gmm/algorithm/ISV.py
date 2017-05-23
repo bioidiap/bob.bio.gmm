@@ -71,7 +71,7 @@ class ISV (GMM):
     """Train Projector and Enroller at the same time"""
     [self._check_feature(feature) for client in train_features for feature in client]
 
-    data1 = numpy.vstack([feature for client in train_features for feature in client])
+    data1 = numpy.vstack(feature for client in train_features for feature in client)
     self.train_ubm(data1)
     # to save some memory, we might want to delete these data
     del data1
