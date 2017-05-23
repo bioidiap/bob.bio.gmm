@@ -7,6 +7,8 @@
    :target: https://www.idiap.ch/software/bob/docs/latest/bob/bob.bio.gmm/master/index.html
 .. image:: https://gitlab.idiap.ch/bob/bob.bio.gmm/badges/master/build.svg
    :target: https://gitlab.idiap.ch/bob/bob.bio.gmm/commits/master
+.. image:: https://gitlab.idiap.ch/bob/bob.bio.gmm/badges/master/coverage.svg
+   :target: https://gitlab.idiap.ch/bob/bob.bio.gmm/commits/master
 .. image:: https://img.shields.io/badge/gitlab-project-0000c0.svg
    :target: https://gitlab.idiap.ch/bob/bob.bio.gmm
 .. image:: http://img.shields.io/pypi/v/bob.bio.gmm.svg
@@ -35,11 +37,10 @@ In this package, utilities that are specific for using GMM-based algorithms are 
 Installation
 ------------
 
-Follow our `installation`_ instructions. Then, using the Python interpreter
-provided by the distribution, bootstrap and buildout this package::
+Complete Bob's `installation`_ instructions. Then, to install this pacakge,
+run::
 
-  $ python bootstrap-buildout.py
-  $ ./bin/buildout
+  $ conda install bob.bio.gmm
 
 
 Contact
