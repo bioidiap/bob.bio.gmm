@@ -151,15 +151,25 @@ class ISV (GMM):
     hdf5file = bob.io.base.HDF5File(feature_file)
     hdf5file.cd('gmmstats')
     gmmstats = bob.learn.em.GMMStats(hdf5file)
-    return gmmstats
+    hdf5file.cd('..')
+    Ux = hdf5file.read('Ux')
+    return [gmmstats, Ux]
+
+
+  def _check_projected(self, probe):
+    """Checks that the probe is of the desired type"""
+    assert isinstance(probe, (tuple, list))
+    assert len(probe) == 2
+    assert isinstance(probe[0], bob.learn.em.GMMStats)
+    assert isinstance(probe[1], numpy.ndarray) and probe[1].ndim == 1 and probe[1].dtype == numpy.float64
 
 
   def enroll(self, enroll_features):
     """Performs ISV enrollment"""
     for feature in enroll_features:
-      assert isinstance(feature, bob.learn.em.GMMStats)
+      self._check_projected(feature)
     machine = bob.learn.em.ISVMachine(self.isvbase)
-    self.isv_trainer.enroll(machine, enroll_features, self.isv_enroll_iterations)
+    self.isv_trainer.enroll(machine, [f[0] for f in enroll_features], self.isv_enroll_iterations)
     # return the resulting gmm
     return machine
 
@@ -172,27 +182,12 @@ class ISV (GMM):
     machine.isv_base = self.isvbase
     return machine
 
-  def read_probe(self, probe_file):
-    """Read the type of features that we require, namely GMMStats"""
-    hdf5file = bob.io.base.HDF5File(probe_file)
-    hdf5file.cd('gmmstats')
-    gmmstats = bob.learn.em.GMMStats(hdf5file)
-    hdf5file.cd('..')
-    Ux = hdf5file.read('Ux')
-    return [gmmstats, Ux]
-
-  def _check_probe(self, probe):
-    """Checks that the probe is of the desired type"""
-    assert isinstance(probe, (tuple, list))
-    assert len(probe) == 2
-    assert isinstance(probe[0], bob.learn.em.GMMStats)
-    assert isinstance(probe[1], numpy.ndarray) and probe[1].ndim == 1 and probe[1].dtype == numpy.float64
 
 
   def score(self, model, probe):
     """Computes the score for the given model and the given probe."""
     assert isinstance(model, bob.learn.em.ISVMachine)
-    self._check_probe(probe)
+    self._check_projected(probe)
 
     gmmstats = probe[0]
     Ux = probe[1]
@@ -201,7 +196,7 @@ class ISV (GMM):
   def score_for_multiple_probes(self, model, probes):
     """This function computes the score between the given model and several given probe files."""
     assert isinstance(model, bob.learn.em.ISVMachine)
-    [self._check_probe(probe) for probe in probes]
+    [self._check_projected(probe) for probe in probes]
     if self.probe_fusion_function is not None:
       # When a multiple probe fusion function is selected, use it
       return Algorithm.score_for_multiple_probes(self, model, probes)

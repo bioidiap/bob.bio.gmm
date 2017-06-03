@@ -114,8 +114,6 @@ class JFA (GMM):
     machine.jfa_base = self.jfa_base
     return machine
 
-  read_probe = read_feature
-
   def score(self, model, probe):
     """Computes the score for the given model and the given probe"""
     assert isinstance(model, bob.learn.em.JFAMachine)

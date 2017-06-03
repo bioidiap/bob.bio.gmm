@@ -71,10 +71,10 @@ class IVector (GMM):
     self.use_plda = use_plda
     self.subspace_dimension_of_t = subspace_dimension_of_t
     self.tv_training_iterations = tv_training_iterations
-    
+
     self.ivector_trainer = bob.learn.em.IVectorTrainer(update_sigma=update_sigma)
     self.whitening_trainer = bob.learn.linear.WhiteningTrainer()
-    
+
     self.lda_dim = lda_dim
     self.lda_trainer = bob.learn.linear.FisherLDATrainer(strip_to_rank=False)
     self.wccn_trainer = bob.learn.linear.WCCNTrainer()
@@ -82,7 +82,7 @@ class IVector (GMM):
     self.plda_dim_F  = plda_dim_F
     self.plda_dim_G = plda_dim_G
     self.plda_training_iterations = plda_training_iterations
-      
+
 
 
   def _check_ivector(self, feature):
@@ -131,7 +131,7 @@ class IVector (GMM):
 
   def train_projector(self, train_features, projector_file):
     """Train Projector and Enroller at the same time"""
-    
+
     [self._check_feature(feature) for client in train_features for feature in client]
     train_features_flatten = [feature for client in train_features for feature in client]
 
@@ -158,15 +158,15 @@ class IVector (GMM):
       self.train_whitener(train_ivectors_flatten)
       # whitening and length-normalizing i-vectors
       train_ivectors = [[self.project_whitening(ivec) for ivec in client] for client in train_ivectors]
-    
+
     if self.use_lda:
       self.train_lda(train_ivectors)
       train_ivectors = [[self.project_lda(ivec) for ivec in client] for client in train_ivectors]
-      
+
     if self.use_wccn:
       self.train_wccn(train_ivectors)
       train_ivectors = [[self.project_wccn(ivec) for ivec in client] for client in train_ivectors]
-      
+
     if self.use_plda:
       self.train_plda(train_ivectors)
 
@@ -191,7 +191,7 @@ class IVector (GMM):
       hdf5file.create_group('Whitener')
       hdf5file.cd('Whitener')
       self.whitener.save(hdf5file)
-    
+
     if self.use_lda:
       hdf5file.cd('/')
       hdf5file.create_group('LDA')
@@ -203,13 +203,13 @@ class IVector (GMM):
       hdf5file.create_group('WCCN')
       hdf5file.cd('WCCN')
       self.wccn.save(hdf5file)
-            
+
     if self.use_plda:
       hdf5file.cd('/')
       hdf5file.create_group('PLDA')
       hdf5file.cd('PLDA')
       self.plda_base.save(hdf5file)
-      
+
 
   def load_tv(self, tv_file):
     hdf5file = bob.io.base.HDF5File(tv_file)
@@ -228,12 +228,12 @@ class IVector (GMM):
   def load_wccn(self, wccn_file):
     hdf5file = bob.io.base.HDF5File(wccn_file)
     self.wccn = bob.learn.linear.Machine(hdf5file)
-      
+
   def load_plda(self, plda_file):
     hdf5file = bob.io.base.HDF5File(plda_file)
     self.plda_base = bob.learn.em.PLDABase(hdf5file)
     self.plda_machine = bob.learn.em.PLDAMachine(self.plda_base)
-    
+
   def load_projector(self, projector_file):
     """Load the GMM and the ISV model from the same HDF5 file"""
     hdf5file = bob.io.base.HDF5File(projector_file)
@@ -250,18 +250,18 @@ class IVector (GMM):
       # Load Whitening
       hdf5file.cd('/Whitener')
       self.load_whitener(hdf5file)
-    
+
     if self.use_lda:
       # Load LDA
       hdf5file.cd('/LDA')
       self.load_lda(hdf5file)
-    
-    if self.use_wccn:    
+
+    if self.use_wccn:
       # Load WCCN
       hdf5file.cd('/WCCN')
       self.load_wccn(hdf5file)
 
-    if self.use_plda:   
+    if self.use_plda:
      # Load PLDA
       hdf5file.cd('/PLDA')
       self.load_plda(hdf5file)
@@ -338,9 +338,6 @@ class IVector (GMM):
     else:
       return bob.bio.base.load(model_file)
 
-  def read_probe(self, probe_file):
-    """read probe file which is an i-vector"""
-    return bob.bio.base.load(probe_file)
 
   def score(self, model, probe):
     """Computes the score for the given model and the given probe."""
