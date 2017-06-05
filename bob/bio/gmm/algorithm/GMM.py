@@ -216,8 +216,6 @@ class GMM (Algorithm):
     """Reads the model, which is a GMM machine"""
     return bob.learn.em.GMMMachine(bob.io.base.HDF5File(model_file))
 
-  read_probe = read_feature
-
   def score(self, model, probe):
     """Computes the score for the given model and the given probe using the scoring function from the config file"""
     assert isinstance(model, bob.learn.em.GMMMachine)
@@ -267,11 +265,6 @@ class GMMRegular (GMM):
 
   ######################################################
   ################ Feature comparison ##################
-  def read_probe(self, probe_file):
-    """Reads a feature from file, which is supposed to be a simple 2D array"""
-    return bob.bio.base.load(probe_file)
-
-
   def score(self, model, probe):
     """Computes the score for the given model and the given probe.
     The score are Log-Likelihood.

@@ -119,7 +119,7 @@ def test_gmm():
   _compare(model, pkg_resources.resource_filename('bob.bio.gmm.test', 'data/gmm_model.hdf5'), gmm1.write_model, gmm1.read_model)
 
   # compare model with probe
-  probe = gmm1.read_probe(pkg_resources.resource_filename('bob.bio.gmm.test', 'data/gmm_projected.hdf5'))
+  probe = gmm1.read_feature(pkg_resources.resource_filename('bob.bio.gmm.test', 'data/gmm_projected.hdf5'))
   reference_score = -0.01676570
   assert abs(gmm1.score(model, probe) - reference_score) < 1e-5, "The scores differ: %3.8f, %3.8f" % (gmm1.score(model, probe), reference_score)
   assert abs(gmm1.score_for_multiple_probes(model, [probe, probe]) - reference_score) < 1e-5
@@ -227,17 +227,17 @@ def test_isv():
   assert len(projected) == 2
   assert isinstance(projected[0], bob.learn.em.GMMStats)
   assert isinstance(projected[1], numpy.ndarray)
-  _compare_complex(projected, pkg_resources.resource_filename('bob.bio.gmm.test', 'data/isv_projected.hdf5'), isv1.write_feature, isv1.read_probe)
+  _compare_complex(projected, pkg_resources.resource_filename('bob.bio.gmm.test', 'data/isv_projected.hdf5'), isv1.write_feature, isv1.read_feature)
 
   # enroll model from random features
   random_features = utils.random_training_set((20,45), count=5, minimum=-5., maximum=5.)
-  enroll_features = [isv1.project(feature)[0] for feature in random_features]
+  enroll_features = [isv1.project(feature) for feature in random_features]
   model = isv1.enroll(enroll_features)
   assert isinstance(model, bob.learn.em.ISVMachine)
   _compare(model, pkg_resources.resource_filename('bob.bio.gmm.test', 'data/isv_model.hdf5'), isv1.write_model, isv1.read_model)
 
   # compare model with probe
-  probe = isv1.read_probe(pkg_resources.resource_filename('bob.bio.gmm.test', 'data/isv_projected.hdf5'))
+  probe = isv1.read_feature(pkg_resources.resource_filename('bob.bio.gmm.test', 'data/isv_projected.hdf5'))
   reference_score = 0.02136784
   assert abs(isv1.score(model, probe) - reference_score) < 1e-5, "The scores differ: %3.8f, %3.8f" % (isv1.score(model, probe), reference_score)
 #  assert abs(isv1.score_for_multiple_probes(model, [probe]*4) - reference_score) < 1e-5, isv1.score_for_multiple_probes(model, [probe, probe])
@@ -321,7 +321,7 @@ def test_jfa():
   _compare(model, pkg_resources.resource_filename('bob.bio.gmm.test', 'data/jfa_model.hdf5'), jfa1.write_model, jfa1.read_model)
 
   # compare model with probe
-  probe = jfa1.read_probe(pkg_resources.resource_filename('bob.bio.gmm.test', 'data/gmm_projected.hdf5'))
+  probe = jfa1.read_feature(pkg_resources.resource_filename('bob.bio.gmm.test', 'data/gmm_projected.hdf5'))
   reference_score = 0.02225812
   assert abs(jfa1.score(model, probe) - reference_score) < 1e-5, "The scores differ: %3.8f, %3.8f" % (jfa1.score(model, probe), reference_score)
   # TODO: implement that
@@ -386,7 +386,7 @@ def test_ivector_cosine():
   _compare(model, pkg_resources.resource_filename('bob.bio.gmm.test', 'data/ivector_model.hdf5'), ivec1.write_model, ivec1.read_model)
 
   # compare model with probe
-  probe = ivec1.read_probe(pkg_resources.resource_filename('bob.bio.gmm.test', 'data/ivector_projected.hdf5'))
+  probe = ivec1.read_feature(pkg_resources.resource_filename('bob.bio.gmm.test', 'data/ivector_projected.hdf5'))
   reference_score = -0.00187151
   assert abs(ivec1.score(model, probe) - reference_score) < 1e-5, "The scores differ: %3.8f, %3.8f" % (ivec1.score(model, probe), reference_score)
   # TODO: implement that
@@ -449,7 +449,7 @@ def test_ivector_plda():
   _compare(model, pkg_resources.resource_filename('bob.bio.gmm.test', 'data/ivector2_model.hdf5'), ivec1.write_model, ivec1.read_model)
 
   # compare model with probe
-  probe = ivec1.read_probe(pkg_resources.resource_filename('bob.bio.gmm.test', 'data/ivector2_projected.hdf5'))
+  probe = ivec1.read_feature(pkg_resources.resource_filename('bob.bio.gmm.test', 'data/ivector2_projected.hdf5'))
   logger.info("%f" %ivec1.score(model, probe))
   reference_score = 1.21879822
   assert abs(ivec1.score(model, probe) - reference_score) < 1e-5, "The scores differ: %3.8f, %3.8f" % (ivec1.score(model, probe), reference_score)
@@ -514,7 +514,7 @@ def test_ivector_lda_wccn_plda():
   _compare(model, pkg_resources.resource_filename('bob.bio.gmm.test', 'data/ivector3_model.hdf5'), ivec1.write_model, ivec1.read_model)
 
   # compare model with probe
-  probe = ivec1.read_probe(pkg_resources.resource_filename('bob.bio.gmm.test', 'data/ivector3_projected.hdf5'))
+  probe = ivec1.read_feature(pkg_resources.resource_filename('bob.bio.gmm.test', 'data/ivector3_projected.hdf5'))
   reference_score = 0.338051
   assert abs(ivec1.score(model, probe) - reference_score) < 1e-5, "The scores differ: %3.8f, %3.8f" % (ivec1.score(model, probe), reference_score)
   assert abs(ivec1.score_for_multiple_probes(model, [probe, probe]) - reference_score) < 1e-5
