@@ -238,7 +238,7 @@ def test_isv():
 
   # compare model with probe
   probe = isv1.read_feature(pkg_resources.resource_filename('bob.bio.gmm.test', 'data/isv_projected.hdf5'))
-  reference_score = 0.02136784
+  reference_score = -0.00018454
   assert abs(isv1.score(model, probe) - reference_score) < 1e-5, "The scores differ: %3.8f, %3.8f" % (isv1.score(model, probe), reference_score)
 #  assert abs(isv1.score_for_multiple_probes(model, [probe]*4) - reference_score) < 1e-5, isv1.score_for_multiple_probes(model, [probe, probe])
   # TODO: Why is the score not identical for multiple copies of the same probe?
@@ -387,7 +387,7 @@ def test_ivector_cosine():
 
   # compare model with probe
   probe = ivec1.read_feature(pkg_resources.resource_filename('bob.bio.gmm.test', 'data/ivector_projected.hdf5'))
-  reference_score = -0.00187151
+  reference_score = 0.06686013
   assert abs(ivec1.score(model, probe) - reference_score) < 1e-5, "The scores differ: %3.8f, %3.8f" % (ivec1.score(model, probe), reference_score)
   # TODO: implement that
   assert abs(ivec1.score_for_multiple_probes(model, [probe, probe]) - reference_score) < 1e-5
@@ -451,7 +451,7 @@ def test_ivector_plda():
   # compare model with probe
   probe = ivec1.read_feature(pkg_resources.resource_filename('bob.bio.gmm.test', 'data/ivector2_projected.hdf5'))
   logger.info("%f" %ivec1.score(model, probe))
-  reference_score = 1.21879822
+  reference_score = 1.15277692
   assert abs(ivec1.score(model, probe) - reference_score) < 1e-5, "The scores differ: %3.8f, %3.8f" % (ivec1.score(model, probe), reference_score)
   assert abs(ivec1.score_for_multiple_probes(model, [probe, probe]) - reference_score) < 1e-5
 
@@ -515,6 +515,6 @@ def test_ivector_lda_wccn_plda():
 
   # compare model with probe
   probe = ivec1.read_feature(pkg_resources.resource_filename('bob.bio.gmm.test', 'data/ivector3_projected.hdf5'))
-  reference_score = 0.338051
+  reference_score = 0.30489049
   assert abs(ivec1.score(model, probe) - reference_score) < 1e-5, "The scores differ: %3.8f, %3.8f" % (ivec1.score(model, probe), reference_score)
   assert abs(ivec1.score_for_multiple_probes(model, [probe, probe]) - reference_score) < 1e-5
