@@ -51,8 +51,8 @@ setup(
 
     url = 'https://gitlab.idiap.ch/bob/bob.bio.gmm',
     license = 'BSD',
-    author = '<YourName>',
-    author_email = '<YourEmail>',
+    author = 'Andre Anjos',
+    author_email = 'andre.anjos@idiap.ch',
     keywords = 'bob, biometric recognition, evaluation',
 
     # If you have a better, long description of your package, place it on the
