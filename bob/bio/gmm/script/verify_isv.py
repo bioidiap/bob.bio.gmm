@@ -83,6 +83,7 @@ def add_isv_jobs(args, job_ids, deps, submitter):
             name = 'pro-gmm',
             number_of_parallel_jobs = args.grid.number_of_projection_jobs,
             dependencies = deps,
+            allow_missing_files = args.allow_missing_files,
             **args.grid.projection_queue)
     deps.append(job_ids['gmm-projection'])
 
@@ -90,6 +91,7 @@ def add_isv_jobs(args, job_ids, deps, submitter):
             '--sub-task train-isv',
             name = 'train-isv',
             dependencies = deps,
+            allow_missing_files = args.allow_missing_files,
             **args.grid.training_queue)
     deps.append(job_ids['isv-training'])
 
@@ -118,12 +120,14 @@ def execute(args):
         algorithm,
         args.extractor,
         indices = base_tools.indices(fs.training_list('extracted', 'train_projector'), args.grid.number_of_projection_jobs),
+        allow_missing_files = args.allow_missing_files,
         force = args.force)
 
   # train the feature projector
   elif args.sub_task == 'train-isv':
     tools.train_isv(
         algorithm,
+        allow_missing_files = args.allow_missing_files,
         force = args.force)
 
   else:

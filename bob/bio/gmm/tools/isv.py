@@ -5,9 +5,10 @@ import bob.io.base
 import os
 
 from bob.bio.base.tools.FileSelector import FileSelector
-from bob.bio.base import utils, tools
+from bob.bio.base import utils, tools 
 
-def train_isv(algorithm, force=False):
+
+def train_isv(algorithm, force=False, allow_missing_files=False):
   """Finally, the UBM is used to train the ISV projector/enroller."""
   fs = FileSelector.instance()
 
@@ -19,6 +20,7 @@ def train_isv(algorithm, force=False):
 
     # read training data
     training_list = fs.training_list('projected_gmm', 'train_projector', arrange_by_client = True)
+    training_list = utils.filter_missing_files(training_list, split_by_client=True, allow_missing_files=allow_missing_files)
     train_gmm_stats = [[algorithm.read_gmm_stats(filename) for filename in client_files] for client_files in training_list]
 
     # perform ISV training
