@@ -1,9 +1,6 @@
 import bob.bio.base
 import numpy
-import os
 
-import logging
-logger = logging.getLogger("bob.bio.gmm")
 
 def add_jobs(args, submitter, local_job_adder):
   """Adds all (desired) jobs of the tool chain to the grid, or to the local list to be executed."""
@@ -68,7 +65,7 @@ def base(algorithm):
   return algorithm.algorithm if is_video_extension(algorithm) else algorithm
 
 
-def read_feature(extractor, feature_file, allow_missing_files = False):
+def read_feature(extractor, feature_file):
   feature = extractor.read_feature(feature_file)
   try:
     import bob.bio.video
