@@ -96,6 +96,7 @@ def add_ivector_jobs(args, job_ids, deps, submitter):
               name='i-e-%d' % iteration,
               number_of_parallel_jobs = args.grid.number_of_projection_jobs,
               dependencies = [job_ids['ivector-m-step']] if iteration != args.tv_start_iteration else deps,
+              allow_missing_files = args.allow_missing_files,
               **args.grid.projection_queue)
 
       # M-step
@@ -114,6 +115,7 @@ def add_ivector_jobs(args, job_ids, deps, submitter):
             name = 'pro-ivector',
             number_of_parallel_jobs = args.grid.number_of_projection_jobs,
             dependencies = deps,
+            allow_missing_files = args.allow_missing_files,
             **args.grid.projection_queue)
     deps.append(job_ids['ivector-projection'])
 
@@ -123,6 +125,7 @@ def add_ivector_jobs(args, job_ids, deps, submitter):
             '--sub-task train-whitener',
             name = 'train-whitener',
             dependencies = deps,
+            allow_missing_files = args.allow_missing_files,
             **args.grid.training_queue)
     deps.append(job_ids['whitener-training'])
 
@@ -133,6 +136,7 @@ def add_ivector_jobs(args, job_ids, deps, submitter):
             name = 'whitened',
             number_of_parallel_jobs = args.grid.number_of_projection_jobs,
             dependencies = deps,
+            allow_missing_files = args.allow_missing_files,
             **args.grid.projection_queue)
     deps.append(job_ids['whitening-projection'])
 
@@ -142,6 +146,7 @@ def add_ivector_jobs(args, job_ids, deps, submitter):
             '--sub-task train-lda',
             name = 'train-lda',
             dependencies = deps,
+            allow_missing_files = args.allow_missing_files,
             **args.grid.training_queue)
     deps.append(job_ids['lda-training'])
 
@@ -152,6 +157,7 @@ def add_ivector_jobs(args, job_ids, deps, submitter):
             name = 'lda_projection',
             number_of_parallel_jobs = args.grid.number_of_projection_jobs,
             dependencies = deps,
+            allow_missing_files = args.allow_missing_files,
             **args.grid.projection_queue)
     deps.append(job_ids['lda-projection'])
 
@@ -161,6 +167,7 @@ def add_ivector_jobs(args, job_ids, deps, submitter):
             '--sub-task train-wccn',
             name = 'train-wccn',
             dependencies = deps,
+            allow_missing_files = args.allow_missing_files,
             **args.grid.training_queue)
     deps.append(job_ids['wccn-training'])
 
@@ -171,6 +178,7 @@ def add_ivector_jobs(args, job_ids, deps, submitter):
             name = 'wccn_projection',
             number_of_parallel_jobs = args.grid.number_of_projection_jobs,
             dependencies = deps,
+            allow_missing_files = args.allow_missing_files,
             **args.grid.projection_queue)
     deps.append(job_ids['wccn-projection'])
 
@@ -179,6 +187,7 @@ def add_ivector_jobs(args, job_ids, deps, submitter):
     job_ids['plda-training'] = submitter.submit(
             '--sub-task train-plda',
             name = 'train-plda',
+            allow_missing_files = args.allow_missing_files,
             dependencies = deps,
             **args.grid.training_queue)
     deps.append(job_ids['plda-training'])
@@ -216,12 +225,14 @@ def execute(args):
         algorithm,
         args.extractor,
         indices = base_tools.indices(fs.training_list('extracted', 'train_projector'), args.grid.number_of_projection_jobs),
+        allow_missing_files = args.allow_missing_files,
         force = args.force)
 
   elif args.sub_task == 'ivector-e-step':
     tools.ivector_estep(
         algorithm,
         args.iteration,
+        allow_missing_files = args.allow_missing_files,
         indices = base_tools.indices(fs.training_list('projected_gmm', 'train_projector'), args.grid.number_of_projection_jobs),
         force = args.force)
 
@@ -237,17 +248,20 @@ def execute(args):
   elif args.sub_task == 'ivector-projection':
     tools.ivector_project(
         algorithm,
+        allow_missing_files = args.allow_missing_files,
         indices = base_tools.indices(fs.training_list('projected_gmm', 'train_projector'), args.grid.number_of_projection_jobs),
         force = args.force)
 
   elif args.sub_task == 'train-whitener':
     tools.train_whitener(
         algorithm,
+        allow_missing_files = args.allow_missing_files,
         force = args.force)
 
   elif args.sub_task == 'whitening-projection':
     tools.whitening_project(
         algorithm,
+        allow_missing_files = args.allow_missing_files,
         indices = base_tools.indices(fs.training_list('projected_gmm', 'train_projector'), args.grid.number_of_projection_jobs),
         force = args.force)
 
@@ -255,12 +269,14 @@ def execute(args):
     if algorithm.use_lda:
       tools.train_lda(
           algorithm,
+          allow_missing_files = args.allow_missing_files,
           force = args.force)
 
   elif args.sub_task == 'lda-projection':
     if algorithm.use_lda:
       tools.lda_project(
           algorithm,
+          allow_missing_files = args.allow_missing_files,
           indices = base_tools.indices(fs.training_list('projected_gmm', 'train_projector'), args.grid.number_of_projection_jobs),
           force = args.force)
 
@@ -268,12 +284,14 @@ def execute(args):
     if algorithm.use_wccn:
       tools.train_wccn(
           algorithm,
+          allow_missing_files = args.allow_missing_files,
           force = args.force)
 
   elif args.sub_task == 'wccn-projection':
     if algorithm.use_wccn:
       tools.wccn_project(
           algorithm,
+          allow_missing_files = args.allow_missing_files,
           indices = base_tools.indices(fs.training_list('projected_gmm', 'train_projector'), args.grid.number_of_projection_jobs),
           force = args.force)
 
@@ -281,6 +299,7 @@ def execute(args):
     if algorithm.use_plda:
       tools.train_plda(
           algorithm,
+          allow_missing_files = args.allow_missing_files,
           force = args.force)
 
   elif args.sub_task == 'save-projector':

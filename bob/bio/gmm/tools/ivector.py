@@ -9,8 +9,7 @@ from bob.bio.base.tools.FileSelector import FileSelector
 from bob.bio.base import utils, tools
 
 
-
-def ivector_estep(algorithm, iteration, indices, force=False):
+def ivector_estep(algorithm, iteration, indices, force=False, allow_missing_files = False):
   """Performs a single E-step of the IVector algorithm (parallel)"""
   fs = FileSelector.instance()
   stats_file = fs.ivector_stats_file(iteration, indices[0], indices[1])
@@ -38,7 +37,9 @@ def ivector_estep(algorithm, iteration, indices, force=False):
 
     # Load data
     training_list = fs.training_list('projected_gmm', 'train_projector')
-    data = [algorithm.read_gmm_stats(training_list[i]) for i in range(indices[0], indices[1])]
+    training_list = [training_list[i] for i in range(indices[0], indices[1])]
+    training_list = utils.filter_missing_files(training_list, split_by_client=False, allow_missing_files=allow_missing_files)    
+    data = [algorithm.read_gmm_stats(f) for f in training_list]
 
     # Perform the E-step
     trainer.e_step(tv, data)
@@ -134,7 +135,7 @@ def ivector_mstep(algorithm, iteration, number_of_parallel_jobs, force=False, cl
     shutil.rmtree(old_dir)
 
 
-def ivector_project(algorithm, indices, force=False):
+def ivector_project(algorithm, indices, force=False, allow_missing_files=False):
   """Performs IVector projection"""
   # read UBM and TV into the IVector class
   fs = FileSelector.instance()
@@ -149,17 +150,19 @@ def ivector_project(algorithm, indices, force=False):
   for i in range(indices[0], indices[1]):
     gmm_stats_file = gmm_stats_files[i]
     ivector_file = ivector_files[i]
-    if not utils.check_file(ivector_file, force):
-      # load feature
-      feature = algorithm.read_gmm_stats(gmm_stats_file)
-      # project feature
-      projected = algorithm.project_ivector(feature)
-      # write it
-      bob.io.base.create_directories_safe(os.path.dirname(ivector_file))
-      bob.bio.base.save(projected, ivector_file)
+
+    if not utils.check_file(ivector_file, force):      
+      if len(utils.filter_missing_files([gmm_stats_file], split_by_client=False, allow_missing_files=allow_missing_files)) > 0:      
+        # load feature
+        feature = algorithm.read_gmm_stats(gmm_stats_file)
+        # project feature
+        projected = algorithm.project_ivector(feature)
+        # write it
+        bob.io.base.create_directories_safe(os.path.dirname(ivector_file))
+        bob.bio.base.save(projected, ivector_file)
 
 
-def train_whitener(algorithm, force=False):
+def train_whitener(algorithm, force=False, allow_missing_files=False):
   """Train the feature projector with the extracted features of the world group."""
   fs = FileSelector.instance()
 
@@ -167,14 +170,16 @@ def train_whitener(algorithm, force=False):
     logger.info("- Whitening projector '%s' already exists.", fs.whitener_file)
   else:
     train_files = fs.training_list('projected_ivector', 'train_projector')
+    train_files = utils.filter_missing_files(train_files, split_by_client=False, allow_missing_files=allow_missing_files)
     train_features = [bob.bio.base.load(f) for f in train_files]
+      
     # perform training
     algorithm.train_whitener(train_features)
     bob.io.base.create_directories_safe(os.path.dirname(fs.whitener_file))
     bob.bio.base.save(algorithm.whitener, fs.whitener_file)
 
 
-def whitening_project(algorithm, indices, force=False):
+def whitening_project(algorithm, indices, force=False, allow_missing_files=False):
   """Performs IVector projection"""
   fs = FileSelector.instance()
   algorithm.load_whitener(fs.whitener_file)
@@ -187,30 +192,33 @@ def whitening_project(algorithm, indices, force=False):
   for i in range(indices[0], indices[1]):
     ivector_file = ivector_files[i]
     whitened_file = whitened_files[i]
-    if not utils.check_file(whitened_file, force):
-      # load feature
-      ivector = algorithm.read_feature(ivector_file)
-      # project feature
-      whitened = algorithm.project_whitening(ivector)
-      # write it
-      bob.io.base.create_directories_safe(os.path.dirname(whitened_file))
-      bob.bio.base.save(whitened, whitened_file)
+    if not utils.check_file(whitened_file, force):    
+      if len(utils.filter_missing_files([ivector_file], split_by_client=False, allow_missing_files=allow_missing_files)) > 0:      
+        # load feature
+        ivector = algorithm.read_feature(ivector_file)
+        # project feature
+        whitened = algorithm.project_whitening(ivector)
+        # write it
+        bob.io.base.create_directories_safe(os.path.dirname(whitened_file))
+        bob.bio.base.save(whitened, whitened_file)
       
 
-def train_lda(algorithm, force=False):
+def train_lda(algorithm, force=False, allow_missing_files=False):
   """Train the feature projector with the extracted features of the world group."""
   fs = FileSelector.instance()
   if utils.check_file(fs.lda_file, force, 1000):
     logger.info("- LDA projector '%s' already exists.", fs.lda_file)
   else:
     train_files = fs.training_list('whitened', 'train_projector', arrange_by_client = True)
+    train_files = utils.filter_missing_files(train_files, split_by_client=True, allow_missing_files=allow_missing_files)
     train_features = [[bob.bio.base.load(filename) for filename in client_files] for client_files in train_files]
+    
     # perform training
     algorithm.train_lda(train_features)
     bob.io.base.create_directories_safe(os.path.dirname(fs.lda_file))
     bob.bio.base.save(algorithm.lda, fs.lda_file)
 
-def lda_project(algorithm, indices, force=False):
+def lda_project(algorithm, indices, force=False, allow_missing_files=False):
   """Performs IVector projection"""
   fs = FileSelector.instance()
   algorithm.load_lda(fs.lda_file)
@@ -224,16 +232,17 @@ def lda_project(algorithm, indices, force=False):
     ivector_file = whitened_files[i]
     lda_projected_file = lda_projected_files[i]
     if not utils.check_file(lda_projected_file, force):
-      # load feature
-      ivector = algorithm.read_feature(ivector_file)
-      # project feature
-      lda_projected = algorithm.project_lda(ivector)
-      # write it
-      bob.io.base.create_directories_safe(os.path.dirname(lda_projected_file))
-      bob.bio.base.save(lda_projected, lda_projected_file)
+      if len(utils.filter_missing_files([ivector_file], split_by_client=False, allow_missing_files=allow_missing_files)) > 0:                
+        # load feature
+        ivector = algorithm.read_feature(ivector_file)
+        # project feature
+        lda_projected = algorithm.project_lda(ivector)
+        # write it
+        bob.io.base.create_directories_safe(os.path.dirname(lda_projected_file))
+        bob.bio.base.save(lda_projected, lda_projected_file)
       
 
-def train_wccn(algorithm, force=False):
+def train_wccn(algorithm, force=False, allow_missing_files=False):
   """Train the feature projector with the extracted features of the world group."""
   fs = FileSelector.instance()
   if utils.check_file(fs.wccn_file, force, 1000):
@@ -244,13 +253,15 @@ def train_wccn(algorithm, force=False):
     else:
       input_label = 'whitened'
     train_files = fs.training_list(input_label, 'train_projector', arrange_by_client = True)
+    train_files = utils.filter_missing_files(train_files, split_by_client=True, allow_missing_files=allow_missing_files)
     train_features = [[bob.bio.base.load(filename) for filename in client_files] for client_files in train_files]
+    
     # perform training
     algorithm.train_wccn(train_features)
     bob.io.base.create_directories_safe(os.path.dirname(fs.wccn_file))
     bob.bio.base.save(algorithm.wccn, fs.wccn_file)
 
-def wccn_project(algorithm, indices, force=False):
+def wccn_project(algorithm, indices, force=False, allow_missing_files=False):
   """Performs IVector projection"""
   fs = FileSelector.instance()
   algorithm.load_wccn(fs.wccn_file)
@@ -267,17 +278,18 @@ def wccn_project(algorithm, indices, force=False):
   for i in range(indices[0], indices[1]):
     ivector_file = input_files[i]
     wccn_projected_file = wccn_projected_files[i]
-    if not utils.check_file(wccn_projected_file, force):
-      # load feature
-      ivector = algorithm.read_feature(ivector_file)
-      # project feature
-      wccn_projected = algorithm.project_wccn(ivector)
-      # write it
-      bob.io.base.create_directories_safe(os.path.dirname(wccn_projected_file))
-      bob.bio.base.save(wccn_projected, wccn_projected_file)
+    if not utils.check_file(wccn_projected_file, force):  
+      if len(utils.filter_missing_files([ivector_file], split_by_client=False, allow_missing_files=allow_missing_files)) > 0:                    
+        # load feature
+        ivector = algorithm.read_feature(ivector_file)
+        # project feature
+        wccn_projected = algorithm.project_wccn(ivector)
+        # write it
+        bob.io.base.create_directories_safe(os.path.dirname(wccn_projected_file))
+        bob.bio.base.save(wccn_projected, wccn_projected_file)
       
 
-def train_plda(algorithm, force=False):
+def train_plda(algorithm, force=False, allow_missing_files=False):
   """Train the feature projector with the extracted features of the world group."""
   fs = FileSelector.instance()
   if utils.check_file(fs.plda_file, force, 1000):
@@ -290,7 +302,9 @@ def train_plda(algorithm, force=False):
     else:
       input_label = 'whitened'
     train_files = fs.training_list(input_label, 'train_projector', arrange_by_client = True)
+    train_files = utils.filter_missing_files(train_files, split_by_client=True, allow_missing_files=allow_missing_files)
     train_features = [[bob.bio.base.load(filename) for filename in client_files] for client_files in train_files]
+    
     # perform training
     algorithm.train_plda(train_features)
     bob.io.base.create_directories_safe(os.path.dirname(fs.plda_file))

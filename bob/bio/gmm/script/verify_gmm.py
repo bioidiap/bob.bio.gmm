@@ -158,6 +158,7 @@ def execute(args):
         algorithm,
         args.extractor,
         args.limit_training_data,
+        allow_missing_files = args.allow_missing_files,
         force = args.force)
 
   # train the feature projector
@@ -166,6 +167,7 @@ def execute(args):
         algorithm,
         args.extractor,
         args.iteration,
+        allow_missing_files = args.allow_missing_files,
         indices = base_tools.indices(fs.training_list('extracted', 'train_projector'), args.grid.number_of_projection_jobs),
         force = args.force)
 
@@ -183,6 +185,7 @@ def execute(args):
         algorithm,
         args.extractor,
         args.limit_training_data,
+        allow_missing_files = args.allow_missing_files,
         force = args.force)
 
   # train the feature projector
@@ -191,6 +194,7 @@ def execute(args):
         algorithm,
         args.extractor,
         args.iteration,
+        allow_missing_files = args.allow_missing_files,
         indices = base_tools.indices(fs.training_list('extracted', 'train_projector'), args.grid.number_of_projection_jobs),
         force = args.force)
 

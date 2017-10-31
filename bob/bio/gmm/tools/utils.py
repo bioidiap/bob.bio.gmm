@@ -1,6 +1,7 @@
 import bob.bio.base
 import numpy
 
+
 def add_jobs(args, submitter, local_job_adder):
   """Adds all (desired) jobs of the tool chain to the grid, or to the local list to be executed."""
 
@@ -63,6 +64,7 @@ def base(algorithm):
   """Returns the base algorithm, if it is a video extension, otherwise returns the algorithm itself"""
   return algorithm.algorithm if is_video_extension(algorithm) else algorithm
 
+
 def read_feature(extractor, feature_file):
   feature = extractor.read_feature(feature_file)
   try:
@@ -73,3 +75,4 @@ def read_feature(extractor, feature_file):
   except ImportError:
     pass
   return feature
+  
