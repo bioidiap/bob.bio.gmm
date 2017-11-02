@@ -314,7 +314,7 @@ def gmm_project(algorithm, extractor, indices, force=False, allow_missing_files 
     if not utils.check_file(projected_file, force):  
       if len(utils.filter_missing_files([feature_file], split_by_client=False, allow_missing_files=allow_missing_files)) > 0:
         # load feature
-        feature = read_feature(extractor, feature_file, allow_missing_files=allow_missing_files)
+        feature = read_feature(extractor, feature_file)
         # project feature
         projected = algorithm.project_ubm(feature)
         # write it
