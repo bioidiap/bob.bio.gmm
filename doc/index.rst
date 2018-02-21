@@ -16,7 +16,6 @@ Particularly, the installation of this and other ``bob.bio`` packages, please re
 
 In the following, we provide more detailed information about the particularities of this package only.
 
-===========
 Users Guide
 ===========
 
@@ -26,7 +25,6 @@ Users Guide
    implementation
    parallel
 
-================
 Reference Manual
 ================
 
@@ -39,7 +37,6 @@ Reference Manual
 
 .. include:: references.rst
 
-=========
 ToDo-List
 =========
 
@@ -49,7 +46,6 @@ Here is a list of things that needs to be done:
 .. todolist::
 
 
-==================
 Indices and tables
 ==================
 
