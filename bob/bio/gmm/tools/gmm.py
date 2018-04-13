@@ -32,6 +32,10 @@ def kmeans_initialize(algorithm, extractor, limit_data = None, force = False, al
     # Perform KMeans initialization
     kmeans_machine = bob.learn.em.KMeansMachine(algorithm.gaussians, data.shape[1])
     # Creates the KMeansTrainer and call the initialization procedure
+    # Reseting the pseudo random number generator so we can have the same initialization for serial and parallel execution. 
+    del algorithm.rng
+    algorithm.rng = bob.core.random.mt19937(algorithm.init_seed)
+    
     algorithm.kmeans_trainer.initialize(kmeans_machine, data, algorithm.rng)
     bob.io.base.create_directories_safe(os.path.dirname(output_file))
     kmeans_machine.save(bob.io.base.HDF5File(output_file, 'w'))
