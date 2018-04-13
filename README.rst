@@ -1,14 +1,14 @@
 .. vim: set fileencoding=utf-8 :
 .. Sun Aug 21 21:38:15 CEST 2016
 
-.. image:: http://img.shields.io/badge/docs-v3.2.1-yellow.svg
-   :target: https://www.idiap.ch/software/bob/docs/bob/bob.bio.gmm/v3.2.1/index.html
+.. image:: http://img.shields.io/badge/docs-stable-yellow.svg
+   :target: https://www.idiap.ch/software/bob/docs/bob/bob.bio.gmm/stable/index.html
 .. image:: http://img.shields.io/badge/docs-latest-orange.svg
    :target: https://www.idiap.ch/software/bob/docs/bob/bob.bio.gmm/master/index.html
-.. image:: https://gitlab.idiap.ch/bob/bob.bio.gmm/badges/v3.2.1/build.svg
-   :target: https://gitlab.idiap.ch/bob/bob.bio.gmm/commits/v3.2.1
-.. image:: https://gitlab.idiap.ch/bob/bob.bio.gmm/badges/v3.2.1/coverage.svg
-   :target: https://gitlab.idiap.ch/bob/bob.bio.gmm/commits/v3.2.1
+.. image:: https://gitlab.idiap.ch/bob/bob.bio.gmm/badges/master/build.svg
+   :target: https://gitlab.idiap.ch/bob/bob.bio.gmm/commits/master
+.. image:: https://gitlab.idiap.ch/bob/bob.bio.gmm/badges/master/coverage.svg
+   :target: https://gitlab.idiap.ch/bob/bob.bio.gmm/commits/master
 .. image:: https://img.shields.io/badge/gitlab-project-0000c0.svg
    :target: https://gitlab.idiap.ch/bob/bob.bio.gmm
 .. image:: http://img.shields.io/pypi/v/bob.bio.gmm.svg
