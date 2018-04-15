@@ -95,7 +95,6 @@ class IVector (GMM):
     self.tv = bob.learn.em.IVectorMachine(self.ubm, self.subspace_dimension_of_t, self.variance_threshold)
 
     # Reseting the pseudo random number generator so we can have the same initialization for serial and parallel execution. 
-    del self.rng
     self.rng = bob.core.random.mt19937(self.init_seed)
 
     # train IVector model
@@ -131,7 +130,6 @@ class IVector (GMM):
     input_dim = training_features[0].shape[1]
 
     # Reseting the pseudo random number generator so we can have the same initialization for serial and parallel execution. 
-    del self.rng
     self.rng = bob.core.random.mt19937(self.init_seed)
     
     self.plda_base = bob.learn.em.PLDABase(input_dim, self.plda_dim_F, self.plda_dim_G, variance_flooring)

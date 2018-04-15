@@ -33,7 +33,6 @@ def kmeans_initialize(algorithm, extractor, limit_data = None, force = False, al
     kmeans_machine = bob.learn.em.KMeansMachine(algorithm.gaussians, data.shape[1])
     # Creates the KMeansTrainer and call the initialization procedure
     # Reseting the pseudo random number generator so we can have the same initialization for serial and parallel execution. 
-    del algorithm.rng
     algorithm.rng = bob.core.random.mt19937(algorithm.init_seed)
     
     algorithm.kmeans_trainer.initialize(kmeans_machine, data, algorithm.rng)

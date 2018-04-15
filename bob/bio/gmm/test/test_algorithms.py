@@ -238,7 +238,7 @@ def test_isv():
 
   # compare model with probe
   probe = isv1.read_feature(pkg_resources.resource_filename('bob.bio.gmm.test', 'data/isv_projected.hdf5'))
-  reference_score = 0.02136783885580
+  reference_score = 0.02136784
   assert abs(isv1.score(model, probe) - reference_score) < 1e-5, "The scores differ: %3.8f, %3.8f" % (isv1.score(model, probe), reference_score)
 #  assert abs(isv1.score_for_multiple_probes(model, [probe]*4) - reference_score) < 1e-5, isv1.score_for_multiple_probes(model, [probe, probe])
   # TODO: Why is the score not identical for multiple copies of the same probe?
@@ -387,7 +387,7 @@ def test_ivector_cosine():
 
   # compare model with probe
   probe = ivec1.read_feature(pkg_resources.resource_filename('bob.bio.gmm.test', 'data/ivector_projected.hdf5'))
-  reference_score = -0.00187151477
+  reference_score = -0.00187151
   assert abs(ivec1.score(model, probe) - reference_score) < 1e-5, "The scores differ: %3.8f, %3.8f" % (ivec1.score(model, probe), reference_score)
   # TODO: implement that
   assert abs(ivec1.score_for_multiple_probes(model, [probe, probe]) - reference_score) < 1e-5
@@ -425,6 +425,7 @@ def test_ivector_plda():
     assert os.path.exists(temp_file)
 
     if regenerate_refs: shutil.copy(temp_file, reference_file)
+
     # check projection matrix
     ivec1.load_projector(reference_file)
     ivec2.load_projector(temp_file)
@@ -444,13 +445,13 @@ def test_ivector_plda():
   random_features = utils.random_training_set((20,45), count=5, minimum=-5., maximum=5.)
   enroll_features = [ivec1.project(feature) for feature in random_features]
 
-  model = ivec1.enroll(enroll_features)  
+  model = ivec1.enroll(enroll_features)
   _compare(model, pkg_resources.resource_filename('bob.bio.gmm.test', 'data/ivector2_model.hdf5'), ivec1.write_model, ivec1.read_model)
 
   # compare model with probe
   probe = ivec1.read_feature(pkg_resources.resource_filename('bob.bio.gmm.test', 'data/ivector2_projected.hdf5'))
   logger.info("%f" %ivec1.score(model, probe))
-  reference_score = 1.2187982243
+  reference_score = 1.21879822
   assert abs(ivec1.score(model, probe) - reference_score) < 1e-5, "The scores differ: %3.8f, %3.8f" % (ivec1.score(model, probe), reference_score)
   assert abs(ivec1.score_for_multiple_probes(model, [probe, probe]) - reference_score) < 1e-5
 
@@ -509,7 +510,7 @@ def test_ivector_lda_wccn_plda():
   # enroll model from random features
   random_features = utils.random_training_set((20,45), count=5, minimum=-5., maximum=5.)
   enroll_features = [ivec1.project(feature) for feature in random_features]
-  model = ivec1.enroll(enroll_features)  
+  model = ivec1.enroll(enroll_features)
   _compare(model, pkg_resources.resource_filename('bob.bio.gmm.test', 'data/ivector3_model.hdf5'), ivec1.write_model, ivec1.read_model)
 
   # compare model with probe

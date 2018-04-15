@@ -114,7 +114,6 @@ class GMM (Algorithm):
     logger.info("  -> Training K-Means")
 
     # Reseting the pseudo random number generator so we can have the same initialization for serial and parallel execution. 
-    del self.rng
     self.rng = bob.core.random.mt19937(self.init_seed)
     bob.learn.em.train(self.kmeans_trainer, kmeans, array, self.kmeans_training_iterations, self.training_threshold, rng=self.rng)
 
@@ -130,7 +129,6 @@ class GMM (Algorithm):
     # Trains the GMM
     logger.info("  -> Training GMM")
     # Reseting the pseudo random number generator so we can have the same initialization for serial and parallel execution. 
-    del self.rng
     self.rng = bob.core.random.mt19937(self.init_seed)
     bob.learn.em.train(self.ubm_trainer, self.ubm, array, self.gmm_training_iterations, self.training_threshold, rng=self.rng)
 
@@ -205,7 +203,7 @@ class GMM (Algorithm):
     logger.debug(" .... Enrolling with %d feature vectors", array.shape[0])
 
     gmm = bob.learn.em.GMMMachine(self.ubm)
-    gmm.set_variance_thresholds(self.variance_threshold)    
+    gmm.set_variance_thresholds(self.variance_threshold)
     bob.learn.em.train(self.enroll_trainer, gmm, array, self.gmm_enroll_iterations, self.training_threshold, rng=self.rng)
     return gmm
 

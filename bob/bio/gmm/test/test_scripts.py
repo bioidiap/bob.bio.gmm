@@ -28,9 +28,6 @@ def _verify(parameters, test_dir, sub_dir, ref_modifier="", score_modifier=('sco
 
     # assert that the score file exists
     score_files = [os.path.join(test_dir, sub_dir, 'Default', norm, '%s-dev%s'%score_modifier) for norm in ('nonorm',  'ztnorm')]
-
-    #import ipdb; ipdb.set_trace()
-
     assert os.path.exists(score_files[0]), "Score file %s does not exist" % score_files[0]
     assert os.path.exists(score_files[1]), "Score file %s does not exist" % score_files[1]
 
