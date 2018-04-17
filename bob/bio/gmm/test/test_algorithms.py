@@ -515,6 +515,6 @@ def test_ivector_lda_wccn_plda():
 
   # compare model with probe
   probe = ivec1.read_feature(pkg_resources.resource_filename('bob.bio.gmm.test', 'data/ivector3_projected.hdf5'))
-  reference_score = 0.338051
+  reference_score = 0.2954148598
   assert abs(ivec1.score(model, probe) - reference_score) < 1e-5, "The scores differ: %3.8f, %3.8f" % (ivec1.score(model, probe), reference_score)
   assert abs(ivec1.score_for_multiple_probes(model, [probe, probe]) - reference_score) < 1e-5

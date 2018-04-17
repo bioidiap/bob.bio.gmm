@@ -64,6 +64,8 @@ class ISV (GMM):
     logger.info("  -> Training ISV enroller")
     self.isvbase = bob.learn.em.ISVBase(self.ubm, self.subspace_dimension_of_u)
     # train ISV model
+    # Reseting the pseudo random number generator so we can have the same initialization for serial and parallel execution. 
+    self.rng = bob.core.random.mt19937(self.init_seed)
     bob.learn.em.train(self.isv_trainer, self.isvbase, data, self.isv_training_iterations, rng=self.rng)
 
 

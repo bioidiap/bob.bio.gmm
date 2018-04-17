@@ -112,7 +112,10 @@ class GMM (Algorithm):
 
     # Trains using the KMeansTrainer
     logger.info("  -> Training K-Means")
-    bob.learn.em.train(self.kmeans_trainer, kmeans, array, self.kmeans_training_iterations, self.training_threshold, self.rng)
+
+    # Reseting the pseudo random number generator so we can have the same initialization for serial and parallel execution. 
+    self.rng = bob.core.random.mt19937(self.init_seed)
+    bob.learn.em.train(self.kmeans_trainer, kmeans, array, self.kmeans_training_iterations, self.training_threshold, rng=self.rng)
 
     variances, weights = kmeans.get_variances_and_weights_for_each_cluster(array)
     means = kmeans.means
@@ -125,7 +128,9 @@ class GMM (Algorithm):
 
     # Trains the GMM
     logger.info("  -> Training GMM")
-    bob.learn.em.train(self.ubm_trainer, self.ubm, array, self.gmm_training_iterations, self.training_threshold, self.rng)
+    # Reseting the pseudo random number generator so we can have the same initialization for serial and parallel execution. 
+    self.rng = bob.core.random.mt19937(self.init_seed)
+    bob.learn.em.train(self.ubm_trainer, self.ubm, array, self.gmm_training_iterations, self.training_threshold, rng=self.rng)
 
 
   def save_ubm(self, projector_file):
@@ -199,7 +204,7 @@ class GMM (Algorithm):
 
     gmm = bob.learn.em.GMMMachine(self.ubm)
     gmm.set_variance_thresholds(self.variance_threshold)
-    bob.learn.em.train(self.enroll_trainer, gmm, array, self.gmm_enroll_iterations, self.training_threshold, self.rng)
+    bob.learn.em.train(self.enroll_trainer, gmm, array, self.gmm_enroll_iterations, self.training_threshold, rng=self.rng)
     return gmm
 
   def enroll(self, feature_arrays):
