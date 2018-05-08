@@ -1,5 +1,3 @@
-import bob.measure
-
 import os
 import shutil
 import tempfile
@@ -42,7 +40,7 @@ def _verify(parameters, test_dir, sub_dir, ref_modifier="", score_modifier=('sco
       d = []
       # read reference and new data
       for score_file in (score_files[i], reference_files[i]):
-        f = bob.measure.load.open_file(score_file)
+        f = bob.bio.base.score.load.open_file(score_file)
         d_ = []
         for line in f:
           if isinstance(line, bytes): line = line.decode('utf-8')
