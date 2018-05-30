@@ -28,7 +28,8 @@ class IVector (GMM):
       use_lda = False,
       use_wccn = False,
       use_plda = False,
-      lda_dim = 50,
+      lda_dim = None,
+      lda_strip_to_rank=True,
       plda_dim_F  = 50,
       plda_dim_G = 50,
       plda_training_iterations = 50,
@@ -55,6 +56,7 @@ class IVector (GMM):
         use_wccn = use_wccn,
         use_plda = use_plda,
         lda_dim = lda_dim,
+        lda_strip_to_rank = lda_strip_to_rank,
         plda_dim_F  = plda_dim_F,
         plda_dim_G = plda_dim_G,
         plda_training_iterations = plda_training_iterations,
@@ -76,7 +78,7 @@ class IVector (GMM):
     self.whitening_trainer = bob.learn.linear.WhiteningTrainer()
 
     self.lda_dim = lda_dim
-    self.lda_trainer = bob.learn.linear.FisherLDATrainer(strip_to_rank=False)
+    self.lda_trainer = bob.learn.linear.FisherLDATrainer(strip_to_rank=lda_strip_to_rank)
     self.wccn_trainer = bob.learn.linear.WCCNTrainer()
     self.plda_trainer = bob.learn.em.PLDATrainer()
     self.plda_dim_F  = plda_dim_F
@@ -112,9 +114,16 @@ class IVector (GMM):
   def train_lda(self, training_features):
     logger.info("  -> Training LDA projector")
     self.lda, __eig_vals = self.lda_trainer.train(training_features)
+
     # resize the machine if desired
-    if self.lda_dim:
+    # You can only clip if the rank is higher than LDA_DIM 
+    if self.lda_dim is not None:
+      if len(__eig_vals) < self.lda_dim:
+        logger.warning("  -> You are resizing the LDA matrix to a value above its rank"
+                       "(from {0} to {1}). Be aware that this may lead you to imprecise eigenvectors.".\
+                        format(len(__eig_vals), self.lda_dim))
       self.lda.resize(self.lda.shape[0], self.lda_dim)
+       
 
   def train_wccn(self, training_features):
     logger.info("  -> Training WCCN projector")
