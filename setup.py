@@ -101,12 +101,6 @@ setup(
 
       # scripts should be declared using this entry:
       'console_scripts' : [
-        'verify_gmm.py    = bob.bio.gmm.script.verify_gmm:main',
-        'verify_isv.py        = bob.bio.gmm.script.verify_isv:main',
-        'verify_ivector.py = bob.bio.gmm.script.verify_ivector:main',
-        'train_gmm.py      = bob.bio.gmm.script.train_gmm:main',
-        'train_isv.py          = bob.bio.gmm.script.train_isv:main',
-        'train_ivector.py   = bob.bio.gmm.script.train_ivector:main',
       ],
 
       'bob.bio.database': [
