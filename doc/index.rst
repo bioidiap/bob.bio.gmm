@@ -23,7 +23,6 @@ Users Guide
    :maxdepth: 2
 
    implementation
-   parallel
 
 Reference Manual
 ================

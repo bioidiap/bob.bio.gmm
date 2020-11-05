@@ -7,12 +7,6 @@ package:
 
 build:
   entry_points:
-    - verify_gmm.py    = bob.bio.gmm.script.verify_gmm:main
-    - verify_isv.py        = bob.bio.gmm.script.verify_isv:main
-    - verify_ivector.py = bob.bio.gmm.script.verify_ivector:main
-    - train_gmm.py      = bob.bio.gmm.script.train_gmm:main
-    - train_isv.py          = bob.bio.gmm.script.train_isv:main
-    - train_ivector.py   = bob.bio.gmm.script.train_ivector:main
   number: {{ environ.get('BOB_BUILD_NUMBER', 0) }}
   run_exports:
     - {{ pin_subpackage(name) }}
@@ -50,12 +44,6 @@ test:
   imports:
     - {{ name }}
   commands:
-    - verify_gmm.py --help
-    - verify_isv.py --help
-    - verify_ivector.py --help
-    - train_gmm.py --help
-    - train_isv.py --help
-    - train_ivector.py --help
     - nosetests --with-coverage --cover-package={{ name }} -sv {{ name }}
     - sphinx-build -aEW {{ project_dir }}/doc {{ project_dir }}/sphinx
     - sphinx-build -aEb doctest {{ project_dir }}/doc sphinx
