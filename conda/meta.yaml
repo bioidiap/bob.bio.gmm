@@ -25,7 +25,6 @@ requirements:
     - bob.blitz
     - bob.core
     - bob.io.base
-    - bob.learn.activation
     - bob.math
     - bob.learn.linear
     - bob.sp
