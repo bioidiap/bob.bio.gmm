@@ -12,7 +12,7 @@ This package is part of the ``bob.bio`` packages, which provide open source tool
 In this package, algorithms for executing experiments based on Gaussian Mixture Models are provided, including scripts to run the training procedures of the Expectation-Maximization loops in parallel.
 
 For more detailed information about the structure of the ``bob.bio`` packages, please refer to the documentation of :ref:`bob.bio.base <bob.bio.base>`.
-Particularly, the installation of this and other ``bob.bio`` packages, please read the :ref:`bob.bio.base.installation`.
+Particularly, the installation of this and other ``bob.bio`` packages, please read the installation_.
 
 In the following, we provide more detailed information about the particularities of this package only.
 
