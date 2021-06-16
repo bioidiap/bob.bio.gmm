@@ -18,27 +18,12 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import logging
-import math
 import os
 import shutil
-
-import numpy
-
-from nose.plugins.skip import SkipTest
-
-logger = logging.getLogger("bob.bio.gmm")
-import pkg_resources
-
-regenerate_refs = False
-
-seed_value = 5489
-
 import sys
 
-_mac_os = sys.platform == "darwin"
-
-
-import scipy.spatial
+import numpy
+import pkg_resources
 
 import bob.bio.gmm
 import bob.io.base
@@ -46,6 +31,14 @@ import bob.io.base.test_utils
 import bob.learn.linear
 
 from bob.bio.base.test import utils
+
+logger = logging.getLogger("bob.bio.gmm")
+
+regenerate_refs = False
+
+seed_value = 5489
+
+_mac_os = sys.platform == "darwin"
 
 
 def _compare(

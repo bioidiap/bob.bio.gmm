@@ -60,7 +60,7 @@ class JFA(GMM):
         self.load_ubm(projector_file)
 
     #######################################################
-    ################ JFA training #########################
+    #                JFA training                         #
     def train_enroller(self, train_features, enroller_file):
         # assert that all training features are GMMStatistics
         for client_feature in train_features:
@@ -85,7 +85,7 @@ class JFA(GMM):
         self.jfa_base.save(bob.io.base.HDF5File(enroller_file, "w"))
 
     #######################################################
-    ################## JFA model enroll ####################
+    #                 JFA model enroll                    #
     def load_enroller(self, enroller_file):
         """Reads the JFA base from file"""
         # now, load the JFA base, if it is included in the file
@@ -108,7 +108,7 @@ class JFA(GMM):
         return machine
 
     ######################################################
-    ################ Feature comparison ##################
+    #                Feature comparison                  #
     def read_model(self, model_file):
         """Reads the JFA Machine that holds the model"""
         machine = bob.learn.em.JFAMachine(bob.io.base.HDF5File(model_file))

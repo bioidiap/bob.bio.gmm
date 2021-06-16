@@ -109,7 +109,7 @@ class GMM(Algorithm):
             )
 
     #######################################################
-    ################ UBM training #########################
+    #                UBM training                         #
 
     def train_ubm(self, array):
 
@@ -190,7 +190,7 @@ class GMM(Algorithm):
         self.save_ubm(projector_file)
 
     #######################################################
-    ############## GMM training using UBM #################
+    #              GMM training using UBM                 #
 
     def load_ubm(self, ubm_file):
         hdf5file = bob.io.base.HDF5File(ubm_file)
@@ -265,7 +265,7 @@ class GMM(Algorithm):
         return self.enroll_gmm(array)
 
     ######################################################
-    ################ Feature comparison ##################
+    #                Feature comparison                  #
     def read_model(self, model_file):
         """Reads the model, which is a GMM machine"""
         return bob.learn.em.GMMMachine(bob.io.base.HDF5File(model_file))
@@ -305,7 +305,7 @@ class GMMRegular(GMM):
         )
 
     #######################################################
-    ################ UBM training #########################
+    #                UBM training                         #
 
     def train_enroller(self, train_features, enroller_file):
         """Computes the Universal Background Model from the training ("world") data"""
@@ -313,14 +313,14 @@ class GMMRegular(GMM):
         return self.train_projector(train_features, enroller_file)
 
     #######################################################
-    ############## GMM training using UBM #################
+    #              GMM training using UBM                 #
 
     def load_enroller(self, enroller_file):
         """Reads the UBM model from file"""
         return self.load_projector(enroller_file)
 
     ######################################################
-    ################ Feature comparison ##################
+    #                Feature comparison                  #
     def score(self, model, probe):
         """Computes the score for the given model and the given probe.
         The score are Log-Likelihood.

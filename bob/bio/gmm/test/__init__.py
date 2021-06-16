@@ -1,1 +1,1 @@
-from . import dummy
+from . import dummy  # noqa: F401

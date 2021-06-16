@@ -36,10 +36,10 @@
 from setuptools import dist
 from setuptools import setup
 
-dist.Distribution(dict(setup_requires=["bob.extension"]))
-
 from bob.extension.utils import find_packages
 from bob.extension.utils import load_requirements
+
+dist.Distribution(dict(setup_requires=["bob.extension"]))
 
 install_requires = load_requirements()
 

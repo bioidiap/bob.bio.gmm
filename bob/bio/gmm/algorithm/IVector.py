@@ -342,7 +342,7 @@ class IVector(GMM):
         return out_ivector
 
     #######################################################
-    ############## IVector projection #####################
+    #              IVector projection                     #
     def project(self, feature_array):
         """Computes GMM statistics against a UBM, then corresponding Ux vector"""
         self._check_feature(feature_array)
@@ -362,7 +362,7 @@ class IVector(GMM):
         return ivector
 
     #######################################################
-    ################## Read / Write I-Vectors ####################
+    #           Read / Write I-Vectors                    #
     def write_feature(self, data, feature_file):
         """Saves the feature, which is the (whitened) I-Vector."""
         bob.bio.base.save(data, feature_file)
@@ -372,7 +372,7 @@ class IVector(GMM):
         return bob.bio.base.load(feature_file)
 
     #######################################################
-    ################## Model  Enrollment ###################
+    #                 Model  Enrollment                   #
     def enroll(self, enroll_features):
         """Performs IVector enrollment"""
         [self._check_ivector(feature) for feature in enroll_features]
@@ -385,7 +385,7 @@ class IVector(GMM):
             return average_ivector
 
     ######################################################
-    ################ Feature comparison ##################
+    #                Feature comparison                  #
     def read_model(self, model_file):
         """Reads the whitened i-vector that holds the model"""
         if self.use_plda:

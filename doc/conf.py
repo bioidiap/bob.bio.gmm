@@ -1,11 +1,15 @@
 #!/usr/bin/env python
 # vim: set fileencoding=utf-8 :
 
-import glob
 import os
-import sys
+import time
 
 import pkg_resources
+import sphinx_rtd_theme
+
+# For inter-documentation mapping:
+from bob.extension.utils import link_documentation
+from bob.extension.utils import load_requirements
 
 # -- General configuration -----------------------------------------------------
 
@@ -75,7 +79,6 @@ master_doc = "index"
 
 # General information about the project.
 project = u"bob.bio.gmm"
-import time
 
 copyright = u"%s, Idiap Research Institute" % time.strftime("%Y")
 
@@ -137,8 +140,6 @@ owner = [u"Idiap Research Institute"]
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
-import sphinx_rtd_theme
-
 html_theme = "sphinx_rtd_theme"
 
 # Theme options are theme-specific and customize the look and feel of a theme
@@ -234,10 +235,6 @@ autodoc_default_options = {
     "undoc-members": True,
     "show-inheritance": True,
 }
-
-# For inter-documentation mapping:
-from bob.extension.utils import link_documentation
-from bob.extension.utils import load_requirements
 
 sphinx_requirements = "extra-intersphinx.txt"
 if os.path.exists(sphinx_requirements):

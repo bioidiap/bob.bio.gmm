@@ -1,7 +1,5 @@
 #!/usr/bin/env python
 
-import numpy
-
 import bob.bio.gmm
 
 algorithm = bob.bio.gmm.algorithm.JFA(

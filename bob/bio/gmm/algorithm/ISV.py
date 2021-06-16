@@ -3,7 +3,6 @@
 # Manuel Guenther <Manuel.Guenther@idiap.ch>
 
 import logging
-import types
 
 import numpy
 
@@ -128,7 +127,7 @@ class ISV(GMM):
         self.load_isv(hdf5file)
 
     #######################################################
-    ################ ISV training #########################
+    #                ISV training                         #
     def project_isv(self, projected_ubm):
         projected_isv = numpy.ndarray(
             shape=(self.ubm.shape[0] * self.ubm.shape[1],), dtype=numpy.float64
@@ -145,7 +144,7 @@ class ISV(GMM):
         return [projected_ubm, projected_isv]
 
     #######################################################
-    ################## ISV model enroll ####################
+    #                 ISV model enroll                    #
 
     def write_feature(self, data, feature_file):
         gmmstats = data[0]
@@ -193,7 +192,7 @@ class ISV(GMM):
         return machine
 
     ######################################################
-    ################ Feature comparison ##################
+    #                Feature comparison                  #
     def read_model(self, model_file):
         """Reads the ISV Machine that holds the model"""
         machine = bob.learn.em.ISVMachine(bob.io.base.HDF5File(model_file))

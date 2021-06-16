@@ -1,1 +1,1 @@
-from . import extractor
+from . import extractor  # noqa: F401
