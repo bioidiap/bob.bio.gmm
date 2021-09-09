@@ -36,8 +36,8 @@ requirements:
   run:
     - python
     - setuptools
-    - bob.bio.base >3.1
-    - matplotlib
+    - {{ pin_compatible('matplotlib') }}
+
 
 test:
   imports:
@@ -49,11 +49,10 @@ test:
     - conda inspect linkages -p $PREFIX {{ name }}  # [not win]
     - conda inspect objects -p $PREFIX {{ name }}  # [osx]
   requires:
-    - bob-devel {{ bob_devel }}.*
-    - nose
-    - coverage
-    - sphinx
-    - sphinx_rtd_theme
+    - nose {{ nose }}
+    - coverage {{ coverage }}
+    - sphinx {{ sphinx }}
+    - sphinx_rtd_theme {{ sphinx_rtd_theme }}
     - bob.db.atnt
     - bob.io.image
     - gridtk
