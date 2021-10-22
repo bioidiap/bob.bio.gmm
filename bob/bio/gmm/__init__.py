@@ -1,4 +1,5 @@
 from . import algorithm  # noqa: F401
+from . import bioalgorithm  # noqa: F401
 from . import test  # noqa: F401
 
 

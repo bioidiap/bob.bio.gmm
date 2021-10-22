@@ -110,6 +110,10 @@ setup(
             "ivector-plda                = bob.bio.gmm.config.algorithm.ivector_plda:algorithm",
             "ivector-lda-wccn-plda = bob.bio.gmm.config.algorithm.ivector_lda_wccn_plda:algorithm",
         ],
+        "bob.bio.bioalgorithm": [
+            "gmm                            = bob.bio.gmm.config.bioalgorithm.gmm:bioalgorithm",
+            "gmm-regular               = bob.bio.gmm.config.bioalgorithm.gmm_regular:bioalgorithm",
+        ],
     },
     # Classifiers are important if you plan to distribute this package through
     # PyPI. You can find the complete list of classifiers that are valid and

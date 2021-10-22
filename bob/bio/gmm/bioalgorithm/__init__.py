@@ -1,8 +1,5 @@
-# from .GMM import GMM
-# from .GMM import GMMRegular
-from .ISV import ISV
-from .IVector import IVector
-from .JFA import JFA
+from .GMM import GMM
+from .GMM import GMMRegular
 
 
 # gets sphinx autodoc done right - don't remove it
@@ -22,10 +19,7 @@ def __appropriate__(*args):
 
 
 __appropriate__(
-    # GMM,
-    # GMMRegular,
-    JFA,
-    ISV,
-    IVector,
+    GMM,
+    GMMRegular,
 )
 __all__ = [_ for _ in dir() if not _.startswith("_")]
