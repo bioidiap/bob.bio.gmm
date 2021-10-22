@@ -268,7 +268,11 @@ class GMM(BioAlgorithm, BaseEstimator):
     #                Feature comparison                  #
     def read_model(self, model_file):
         """Reads the model, which is a GMM machine"""
-        return GMMMachine.from_hdf5(bob.io.base.HDF5File(model_file))
+        return GMMMachine.from_hdf5(bob.io.base.HDF5File(model_file), ubm=self.ubm)
+
+    def write_model(self, model, model_file):
+        """Write the features (GMM_Stats)"""
+        return model.save(model_file)
 
     def score(self, biometric_reference: GMMMachine, data: GMMStats):
         """Computes the score for the given model and the given probe.
@@ -283,13 +287,13 @@ class GMM(BioAlgorithm, BaseEstimator):
             The probe data to compare to the model.
         """
 
-        assert isinstance(biometric_reference, GMMMachine)  # TODO is it a list?
+        assert isinstance(biometric_reference, GMMMachine)
         assert isinstance(data, GMMStats)
         return self.scoring_function(
             models_means=[biometric_reference],
             ubm=self.ubm,
             test_stats=data,
-            frame_length_normalisation=True,
+            frame_length_normalization=True,
         )[0, 0]
 
     def score_multiple_biometric_references(
@@ -307,26 +311,27 @@ class GMM(BioAlgorithm, BaseEstimator):
             The probe data to compare to the models.
         """
 
-        assert isinstance(biometric_references, GMMMachine)  # TODO is it a list?
+        assert isinstance(biometric_references, GMMMachine)
         assert isinstance(data, GMMStats)
         return self.scoring_function(
             models_means=biometric_references,
             ubm=self.ubm,
             test_stats=data,
-            frame_length_normalisation=True,
+            frame_length_normalization=True,
         )
 
-    # def score_for_multiple_probes(self, model, probes):
-    #     """This function computes the score between the given model and several given probe files."""
-    #     assert isinstance(model, GMMMachine)
-    #     for probe in probes:
-    #         assert isinstance(probe, GMMStats)
-    #     #    logger.warn("Please verify that this function is correct")
-    #     return self.probe_fusion_function(
-    #         self.scoring_function(
-    #             model.means, self.ubm, probes, [], frame_length_normalisation=True
-    #         )
-    #     )
+    def score_for_multiple_probes(self, model, probes):
+        """This function computes the score between the given model and several given probe files."""
+        assert isinstance(model, GMMMachine)
+        for probe in probes:
+            assert isinstance(probe, GMMStats)
+        #    logger.warn("Please verify that this function is correct")
+        return self.scoring_function(
+            models_means=model.means,
+            ubm=self.ubm,
+            test_stats=probes,
+            frame_length_normalization=True,
+        ).mean()
 
     def fit(self, X, y=None, **kwargs):
         """Trains the UBM."""

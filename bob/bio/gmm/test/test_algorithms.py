@@ -24,7 +24,6 @@ import sys
 
 import numpy
 import pkg_resources
-import pytest
 
 import bob.bio.gmm
 import bob.io.base
@@ -35,7 +34,7 @@ from bob.bio.base.test import utils
 
 logger = logging.getLogger(__name__)
 
-regenerate_refs = True
+regenerate_refs = False
 
 seed_value = 5489
 
@@ -73,11 +72,8 @@ def _compare_complex(
             assert numpy.allclose(d, r, atol=1e-5)
 
 
-@pytest.mark.isolated_gmm
 def test_gmm():
-    temp_file = (
-        "./temptest/test_file"  # TODO bob.io.base.test_utils.temporary_filename()
-    )
+    temp_file = bob.io.base.test_utils.temporary_filename()
     gmm1 = bob.bio.base.load_resource(
         "gmm", "bioalgorithm", preferred_package="bob.bio.gmm"
     )
@@ -85,11 +81,9 @@ def test_gmm():
     assert isinstance(
         gmm1, bob.bio.base.pipelines.vanilla_biometrics.abstract_classes.BioAlgorithm
     )
-    # assert gmm1.performs_projection
-    # assert gmm1.requires_projector_training
-    # assert not gmm1.use_projected_features_for_enrollment
-    # assert not gmm1.split_training_features_by_client
-    # assert not gmm1.requires_enroller_training
+
+    # Fix the number of gaussians for tests
+    gmm1.number_of_gaussians = 2
 
     # create smaller GMM object
     gmm2 = bob.bio.gmm.bioalgorithm.GMM(
@@ -149,7 +143,7 @@ def test_gmm():
     probe = gmm1.read_feature(
         pkg_resources.resource_filename("bob.bio.gmm.test", "data/gmm_projected.hdf5")
     )
-    reference_score = -0.01676570
+    reference_score = -0.01992773
     assert (
         abs(gmm1.score(model, probe) - reference_score) < 1e-5
     ), "The scores differ: %3.8f, %3.8f" % (gmm1.score(model, probe), reference_score)
