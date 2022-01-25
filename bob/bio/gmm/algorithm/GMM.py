@@ -14,18 +14,21 @@ import logging
 
 from typing import Callable
 
+import os
+
 import dask.array as da
 import numpy as np
+import copy
 import dask
 from h5py import File as HDF5File
 
 from sklearn.base import BaseEstimator
 
 from bob.bio.base.pipelines.vanilla_biometrics.abstract_classes import BioAlgorithm
+from bob.learn.em.cluster import KMeansMachine
 from bob.learn.em.mixture import GMMMachine
 from bob.learn.em.mixture import GMMStats
 from bob.learn.em.mixture import linear_scoring
-from bob.pipelines.wrappers import DaskWrapper
 
 logger = logging.getLogger(__name__)
 
@@ -118,8 +121,7 @@ class GMM(BioAlgorithm, BaseEstimator):
         self.responsibility_threshold = responsibility_threshold
 
         def scoring_function_wrapped(*args, **kwargs):
-            with dask.config.set(scheduler="threads"):
-                return scoring_function(*args, **kwargs)
+            return scoring_function(*args, **kwargs)
 
         self.scoring_function = scoring_function_wrapped
 
@@ -154,7 +156,7 @@ class GMM(BioAlgorithm, BaseEstimator):
         self.ubm.save(hdf5)
 
     def load_ubm(self, ubm_file):
-        hdf5file = HDF5File(ubm_file)
+        hdf5file = HDF5File(ubm_file, "r")
         logger.debug("Loading model from file '%s'", ubm_file)
         # read UBM
         self.ubm = GMMMachine.from_hdf5(hdf5file)
@@ -163,19 +165,17 @@ class GMM(BioAlgorithm, BaseEstimator):
     def project(self, array):
         """Computes GMM statistics against a UBM, given a 2D array of feature vectors"""
         self._check_feature(array)
-        logger.debug(" .... Projecting %d feature vectors", array.shape[0])
+        logger.warning(" .... Projecting %d feature vectors", array.shape[0])
         # Accumulates statistics
-        with dask.config.set(scheduler="threads"):
-            gmm_stats = GMMStats(self.ubm.shape[0], self.ubm.shape[1])
-            self.ubm.acc_statistics(array, gmm_stats)
-            gmm_stats.compute()
+        gmm_stats = self.ubm.transform(array)
+        gmm_stats.compute()
 
         # return the resulting statistics
         return gmm_stats
 
     def read_feature(self, feature_file):
         """Read the type of features that we require, namely GMM_Stats"""
-        return GMMStats.from_hdf5(HDF5File(feature_file))
+        return GMMStats.from_hdf5(HDF5File(feature_file, "r"))
 
     def write_feature(self, feature, feature_file):
         """Write the features (GMM_Stats)"""
@@ -184,7 +184,7 @@ class GMM(BioAlgorithm, BaseEstimator):
     def enroll(self, data):
         """Enrolls a GMM using MAP adaptation, given a list of 2D np.ndarray's of feature vectors"""
         [self._check_feature(feature) for feature in data]
-        array = np.vstack(data)
+        array = da.vstack(data)
         # Use the array to train a GMM and return it
         logger.debug(" .... Enrolling with %d feature vectors", array.shape[0])
 
@@ -193,7 +193,7 @@ class GMM(BioAlgorithm, BaseEstimator):
             gmm = GMMMachine(
                 n_gaussians=self.number_of_gaussians,
                 trainer="map",
-                ubm=self.ubm,
+                ubm=copy.deepcopy(self.ubm),
                 convergence_threshold=self.training_threshold,
                 max_fitting_steps=self.gmm_enroll_iterations,
                 random_state=self.rng,
@@ -202,18 +202,14 @@ class GMM(BioAlgorithm, BaseEstimator):
                 update_weights=True,  # TODO default?
             )
             gmm.variance_thresholds = self.variance_threshold
-            gmm = gmm.fit(array)
-            # info = {k: type(v) for k, v in gmm.__dict__.items()}
-            # for k, v in gmm.gaussians_.__dict__.items():
-            #     info[k] = type(v)
-            # raise ValueError(str(info))
+            gmm.fit(array)
         return gmm
 
-    def read_model(self, model_file):
+    def read_biometric_reference(self, model_file):
         """Reads the model, which is a GMM machine"""
-        return GMMMachine.from_hdf5(HDF5File(model_file), ubm=self.ubm)
+        return GMMMachine.from_hdf5(HDF5File(model_file, "r"), ubm=self.ubm)
 
-    def write_model(self, model, model_file):
+    def write_biometric_reference(self, model, model_file):
         """Write the features (GMM_Stats)"""
         return model.save(model_file)
 
@@ -230,11 +226,13 @@ class GMM(BioAlgorithm, BaseEstimator):
             The probe data to compare to the model.
         """
 
+        logger.debug(f"scoring {biometric_reference}, {data}")
         assert isinstance(biometric_reference, GMMMachine)
+        stats = self.project(data)
         return self.scoring_function(
             models_means=[biometric_reference],
             ubm=self.ubm,
-            test_stats=data,
+            test_stats=stats,
             frame_length_normalization=True,
         )[0, 0]
 
@@ -253,6 +251,7 @@ class GMM(BioAlgorithm, BaseEstimator):
             The probe data to compare to the models.
         """
 
+        logger.debug(f"scoring {biometric_references}, {data}")
         assert isinstance(biometric_references[0], GMMMachine), type(
             biometric_references[0]
         )
@@ -266,9 +265,11 @@ class GMM(BioAlgorithm, BaseEstimator):
 
     def score_for_multiple_probes(self, model, probes):
         """This function computes the score between the given model and several given probe files."""
+        logger.debug(f"scoring {model}, {probes}")
         assert isinstance(model, GMMMachine)
+        stats = []
         for probe in probes:
-            assert isinstance(probe, GMMStats)
+            stats.append(self.project(probe))
         #    logger.warn("Please verify that this function is correct")
         return (
             self.scoring_function(
@@ -283,31 +284,50 @@ class GMM(BioAlgorithm, BaseEstimator):
 
     def fit(self, X, y=None, **kwargs):
         """Trains the UBM."""
+        ubm_filename = "UBM_mobio_001.hdf5"  # Manually set "projector" file TODO remove
+        if not os.path.exists(ubm_filename):
 
-        # Stack all the samples in a 2D array of features
-        array = da.vstack(X)
+            # Stack all the samples in a 2D array of features
+            array = np.vstack(X).persist()
 
-        logger.debug("UBM with %d feature vectors", array.shape[0])
+            logger.debug("UBM with %d feature vectors", array.shape[0])
 
-        logger.debug(f"Creating UBM machine with {self.number_of_gaussians} gaussians")
+            logger.debug(f"Creating UBM machine with {self.number_of_gaussians} gaussians")
 
-        self.ubm = GMMMachine(
-            n_gaussians=self.number_of_gaussians,
-            trainer="ml",
-            max_fitting_steps=self.ubm_training_iterations,
-            convergence_threshold=self.training_threshold,
-            update_means=self.update_means,
-            update_variances=self.update_variances,
-            update_weights=self.update_weights,
-            # TODO more params?
-        )
+            self.ubm = GMMMachine(
+                n_gaussians=self.number_of_gaussians,
+                trainer="ml",
+                max_fitting_steps=self.ubm_training_iterations,
+                convergence_threshold=self.training_threshold,
+                update_means=self.update_means,
+                update_variances=self.update_variances,
+                update_weights=self.update_weights,
+                k_means_trainer=KMeansMachine(
+                    self.number_of_gaussians,
+                    convergence_threshold=self.training_threshold,  # TODO Have a separate threshold for kmeans instead of re-using the one for GMM...
+                    max_iter=self.kmeans_training_iterations,  # TODO pass this param through GMMMachine instead of the full KMeansMachine?
+                    init_method="k-means||",
+                    init_max_iter=5,
+                )
+                # TODO more params?
+            )
 
-        # Trains the GMM
-        logger.info("Training UBM GMM")
-        # Resetting the pseudo random number generator so we can have the same initialization for serial and parallel execution.
-        # self.rng = bob.core.random.mt19937(self.init_seed)
-        self.ubm = self.ubm.fit(array)
+            # Trains the GMM
+            logger.info("Training UBM GMM")
+            # Resetting the pseudo random number generator so we can have the same initialization for serial and parallel execution.
+            # self.rng = bob.core.random.mt19937(self.init_seed)
 
+            self.ubm = self.ubm.fit(array)
+
+            logger.warning(f"Saving trained ubm to {ubm_filename}")
+            self.save_ubm(ubm_filename)
+
+            if not np.all(self.ubm.weights):
+                logger.error("zero weights after gmm training")
+                raise ValueError("!! zero weights after gmm training...")
+        else:
+            logger.warning(f"Loading trained ubm from {ubm_filename}")
+            self.load_ubm(ubm_filename)
         return self
 
     def transform(self, X, **kwargs):
