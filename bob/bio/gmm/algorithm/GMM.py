@@ -230,9 +230,8 @@ class GMM(BioAlgorithm, BaseEstimator):
 
         logger.debug(f"scoring {biometric_reference}, {probe}")
         if not isinstance(probe, GMMStats):
-            probe = self.project(
-                probe
-            )  # Projection is done here instead of transform (or it would be applied to enrollment data too...)
+            # Projection is done here instead of in transform (or it would be applied to enrollment data too...)
+            probe = self.project(probe)
         return self.scoring_function(
             models_means=[biometric_reference],
             ubm=self.ubm,
@@ -265,26 +264,22 @@ class GMM(BioAlgorithm, BaseEstimator):
             ubm=self.ubm,
             test_stats=stats,
             frame_length_normalization=True,
-        )
+        ).reshape((-1,))
 
-    def score_for_multiple_probes(self, model, probes):
+    def score_for_multiple_probes(self, biometric_reference, probes):
         """This function computes the score between the given model and several given probe files."""
-        logger.debug(f"scoring {model}, {probes}")
-        assert isinstance(model, GMMMachine)
+        logger.debug(f"scoring {biometric_reference}, {probes}")
+        assert isinstance(biometric_reference, GMMMachine)
         stats = [
             self.project(probe) if not isinstance(probe, GMMStats) else probe
             for probe in probes
         ]
-        return (
-            self.scoring_function(
-                models_means=model.means,
-                ubm=self.ubm,
-                test_stats=stats,
-                frame_length_normalization=True,
-            )
-            .mean()
-            .reshape((-1,))
-        )
+        return self.scoring_function(
+            models_means=biometric_reference.means,
+            ubm=self.ubm,
+            test_stats=stats,
+            frame_length_normalization=True,
+        ).reshape((-1,))
 
     def fit(self, X, y=None, **kwargs):
         """Trains the UBM."""

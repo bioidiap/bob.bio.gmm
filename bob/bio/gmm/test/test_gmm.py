@@ -18,8 +18,10 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import logging
+import os
 import tempfile
 
+import numpy
 import pkg_resources
 
 import bob.bio.gmm
@@ -46,6 +48,8 @@ def test_class():
         gmm1, bob.bio.base.pipelines.vanilla_biometrics.abstract_classes.BioAlgorithm
     )
     assert gmm1.number_of_gaussians == 512
+    assert "bob_fit_supports_dask_array" in gmm1._get_tags()
+    assert gmm1.transform(None) is None
 
 
 def test_training():
@@ -125,10 +129,16 @@ def test_enroll():
         "bob.bio.gmm.test", "data/gmm_enrolled.hdf5"
     )
     if regenerate_refs:
-        biometric_reference.save(reference_file)
+        gmm1.write_biometric_reference(biometric_reference, reference_file)
 
+    # Compare to pre-generated file
     gmm2 = gmm1.read_biometric_reference(reference_file)
     assert biometric_reference.is_similar_to(gmm2)
+
+    with tempfile.NamedTemporaryFile(prefix="bob_", suffix="_bioref.hdf5") as fd:
+        temp_file = fd.name
+        gmm1.write_biometric_reference(biometric_reference, reference_file)
+        assert os.path.exists(temp_file)
 
 
 def test_score():
@@ -143,18 +153,27 @@ def test_score():
     probe = GMMStats.from_hdf5(
         pkg_resources.resource_filename("bob.bio.gmm.test", "data/gmm_projected.hdf5")
     )
+    probe_data = utils.random_array((20, 45), -5.0, 5.0, seed=84)
 
-    reference_score = 0.045073
-    assert (
-        abs(gmm1.score(biometric_reference, probe) - reference_score) < 1e-5
-    ), "The scores differ: %3.8f, %3.8f" % (
-        gmm1.score(biometric_reference, probe),
-        reference_score,
+    reference_score = -0.098980
+
+    numpy.testing.assert_almost_equal(
+        gmm1.score(biometric_reference, probe), reference_score, decimal=5
     )
-    assert (
-        abs(
-            gmm1.score_for_multiple_probes(biometric_reference, [probe, probe])
-            - reference_score
-        )
-        < 1e-5
+
+    multi_probes = gmm1.score_for_multiple_probes(
+        biometric_reference, [probe, probe, probe]
+    )
+    assert multi_probes.shape == (3,), multi_probes.shape
+    numpy.testing.assert_almost_equal(multi_probes, reference_score, decimal=5)
+
+    multi_refs = gmm1.score_multiple_biometric_references(
+        [biometric_reference, biometric_reference, biometric_reference], probe
+    )
+    assert multi_refs.shape == (3,), multi_refs.shape
+    numpy.testing.assert_almost_equal(multi_refs, reference_score, decimal=5)
+
+    # With not projected data
+    numpy.testing.assert_almost_equal(
+        gmm1.score(biometric_reference, probe_data), reference_score, decimal=5
     )
