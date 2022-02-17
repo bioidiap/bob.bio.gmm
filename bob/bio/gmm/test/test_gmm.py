@@ -18,7 +18,6 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import logging
-import os
 import tempfile
 
 import pkg_resources
@@ -28,6 +27,7 @@ import bob.bio.gmm
 from bob.bio.base.test import utils
 from bob.bio.gmm.algorithm import GMM
 from bob.learn.em.mixture import GMMMachine
+from bob.learn.em.mixture import GMMStats
 
 logger = logging.getLogger(__name__)
 
@@ -50,6 +50,7 @@ def test_class():
 
 def test_training():
     """Tests the generation of the UBM."""
+    # Set a small training iteration count
     gmm1 = GMM(
         number_of_gaussians=2,
         kmeans_training_iterations=1,
@@ -59,24 +60,26 @@ def test_training():
     train_data = utils.random_training_set(
         (100, 45), count=5, minimum=-5.0, maximum=5.0
     )
-    reference_file = pkg_resources.resource_filename(
-        "bob.bio.gmm.test", "data/gmm_ubm.hdf5"
-    )
 
-    # Train the projector
+    # Train the UBM (projector)
     gmm1.fit(train_data)
 
+    # Test saving and loading of projector
     with tempfile.NamedTemporaryFile(prefix="bob_", suffix="_model.hdf5") as fd:
         temp_file = fd.name
         gmm1.save_model(temp_file)
 
-        assert os.path.exists(temp_file)
-
+        reference_file = pkg_resources.resource_filename(
+            "bob.bio.gmm.test", "data/gmm_ubm.hdf5"
+        )
         if regenerate_refs:
             gmm1.save_model(reference_file)
 
-        gmm1.ubm = GMMMachine.from_hdf5(reference_file)
-        assert gmm1.ubm.is_similar_to(GMMMachine.from_hdf5(temp_file))
+        gmm2 = GMM(number_of_gaussians=2)
+
+        gmm2.load_model(temp_file)
+        ubm_reference = GMMMachine.from_hdf5(reference_file)
+        assert gmm2.ubm.is_similar_to(ubm_reference)
 
 
 def test_projector():
@@ -92,14 +95,13 @@ def test_projector():
     projected = gmm1.project(feature)
     assert isinstance(projected, bob.learn.em.mixture.GMMStats)
 
-    reference_path = pkg_resources.resource_filename(
+    reference_file = pkg_resources.resource_filename(
         "bob.bio.gmm.test", "data/gmm_projected.hdf5"
     )
-
     if regenerate_refs:
-        projected.save(reference_path)
+        projected.save(reference_file)
 
-    reference = gmm1.read_feature(reference_path)
+    reference = GMMStats.from_hdf5(reference_file)
     assert projected.is_similar_to(reference)
 
 
@@ -122,24 +124,23 @@ def test_enroll():
     reference_file = pkg_resources.resource_filename(
         "bob.bio.gmm.test", "data/gmm_enrolled.hdf5"
     )
-
     if regenerate_refs:
         biometric_reference.save(reference_file)
 
-    gmm2 = GMMMachine.from_hdf5(reference_file, ubm=ubm)
+    gmm2 = gmm1.read_biometric_reference(reference_file)
     assert biometric_reference.is_similar_to(gmm2)
 
 
 def test_score():
     gmm1 = GMM(number_of_gaussians=2)
-    gmm1.ubm = GMMMachine.from_hdf5(
+    gmm1.load_model(
         pkg_resources.resource_filename("bob.bio.gmm.test", "data/gmm_ubm.hdf5")
     )
     biometric_reference = GMMMachine.from_hdf5(
         pkg_resources.resource_filename("bob.bio.gmm.test", "data/gmm_enrolled.hdf5"),
         ubm=gmm1.ubm,
     )
-    probe = gmm1.read_feature(
+    probe = GMMStats.from_hdf5(
         pkg_resources.resource_filename("bob.bio.gmm.test", "data/gmm_projected.hdf5")
     )
 

@@ -30,8 +30,6 @@ from bob.learn.em.mixture import linear_scoring
 
 logger = logging.getLogger(__name__)
 
-# from bob.pipelines import ToDaskBag  # Used when switching from samples to da.Array
-
 
 class GMM(BioAlgorithm, BaseEstimator):
     """Algorithm for computing UBM and Gaussian Mixture Models of the features.
@@ -109,7 +107,7 @@ class GMM(BioAlgorithm, BaseEstimator):
             Function returning a score from a model, a UBM, and a probe.
         """
 
-        # copy parameters
+        # Copy parameters
         self.number_of_gaussians = number_of_gaussians
         self.kmeans_training_iterations = kmeans_training_iterations
         self.ubm_training_iterations = ubm_training_iterations
@@ -148,7 +146,7 @@ class GMM(BioAlgorithm, BaseEstimator):
             )
 
     def save_model(self, ubm_file):
-        """Saves the projector to file."""
+        """Saves the projector (UBM) to file."""
         # Saves the UBM to file
         logger.debug("Saving model to file '%s'", ubm_file)
 
@@ -156,44 +154,39 @@ class GMM(BioAlgorithm, BaseEstimator):
         self.ubm.save(hdf5)
 
     def load_model(self, ubm_file):
-        """Loads the projector from a file."""
+        """Loads the projector (UBM) from a file."""
         hdf5file = HDF5File(ubm_file, "r")
         logger.debug("Loading model from file '%s'", ubm_file)
-        # Read UBM
+        # Read the UBM
         self.ubm = GMMMachine.from_hdf5(hdf5file)
         self.ubm.variance_thresholds = self.variance_threshold
 
     def project(self, array):
-        """Computes GMM statistics against a UBM, given a 2D array of feature vectors"""
+        """Computes GMM statistics against a UBM, given a 2D array of feature vectors
+
+        This is applied to the probes before scoring.
+        """
         self._check_feature(array)
         logger.debug("Projecting %d feature vectors", array.shape[0])
         # Accumulates statistics
         gmm_stats = self.ubm.transform(array)
         gmm_stats.compute()
 
-        # return the resulting statistics
+        # Return the resulting statistics
         return gmm_stats
-
-    def read_feature(self, feature_file):
-        """Read the type of features that we require, namely GMM_Stats"""
-        return GMMStats.from_hdf5(HDF5File(feature_file, "r"))
-
-    def write_feature(self, feature, feature_file):
-        """Write the features (GMM_Stats)"""
-        return feature.save(feature_file)
 
     def enroll(self, data):
         """Enrolls a GMM using MAP adaptation given a reference's feature vectors
 
-        Returns a GMMMachine tweaked from the UBM with MAP
+        Returns a GMMMachine tuned from the UBM with MAP on a biometric reference data.
         """
 
         [self._check_feature(feature) for feature in data]
         array = da.vstack(data)
         # Use the array to train a GMM and return it
-        logger.debug(" .... Enrolling with %d feature vectors", array.shape[0])
+        logger.info("Enrolling with %d feature vectors", array.shape[0])
 
-        # TODO responsibility_threshold
+        # TODO accept responsibility_threshold in bob.learn.em
         with dask.config.set(scheduler="threads"):
             gmm = GMMMachine(
                 n_gaussians=self.number_of_gaussians,
@@ -205,18 +198,21 @@ class GMM(BioAlgorithm, BaseEstimator):
                 update_means=self.enroll_update_means,
                 update_variances=self.enroll_update_variances,
                 update_weights=self.enroll_update_weights,
+                mean_var_update_threshold=self.variance_threshold,
             )
-            gmm.variance_thresholds = self.variance_threshold
             gmm.fit(array)
         return gmm
 
     def read_biometric_reference(self, model_file):
-        """Reads an enrolled reference model, which is a MAP GMMMachine"""
+        """Reads an enrolled reference model, which is a MAP GMMMachine."""
+        if self.ubm is None:
+            raise ValueError(
+                "You must load a UBM before reading a biometric reference."
+            )
         return GMMMachine.from_hdf5(HDF5File(model_file, "r"), ubm=self.ubm)
 
-    @classmethod
-    def write_biometric_reference(cls, model: GMMMachine, model_file):
-        """Write the enrolled reference (MAP GMMMachine)"""
+    def write_biometric_reference(self, model: GMMMachine, model_file):
+        """Write the enrolled reference (MAP GMMMachine) into a file."""
         return model.save(model_file)
 
     def score(self, biometric_reference: GMMMachine, probe):
@@ -307,6 +303,7 @@ class GMM(BioAlgorithm, BaseEstimator):
             update_means=self.update_means,
             update_variances=self.update_variances,
             update_weights=self.update_weights,
+            mean_var_update_threshold=self.variance_threshold,
             k_means_trainer=KMeansMachine(
                 self.number_of_gaussians,
                 convergence_threshold=self.training_threshold,
