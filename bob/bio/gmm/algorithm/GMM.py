@@ -10,18 +10,16 @@ This adds the notions of models, probes, enrollment, and scores to GMM.
 """
 
 
+import copy
 import logging
 
 from typing import Callable
 
-import os
-
+import dask
 import dask.array as da
 import numpy as np
-import copy
-import dask
-from h5py import File as HDF5File
 
+from h5py import File as HDF5File
 from sklearn.base import BaseEstimator
 
 from bob.bio.base.pipelines.vanilla_biometrics.abstract_classes import BioAlgorithm
@@ -56,17 +54,20 @@ class GMM(BioAlgorithm, BaseEstimator):
         ubm_training_iterations: int = 25,  # Maximum number of iterations for GMM Training
         training_threshold: float = 5e-4,  # Threshold to end the ML training
         variance_threshold: float = 5e-4,  # Minimum value that a variance can reach
-        update_weights: bool = True,
         update_means: bool = True,
         update_variances: bool = True,
+        update_weights: bool = True,
         # parameters of the GMM enrollment
-        relevance_factor: float = 4,  # Relevance factor as described in Reynolds paper
         gmm_enroll_iterations: int = 1,  # Number of iterations for the enrollment phase
+        enroll_update_means: bool = True,
+        enroll_update_variances: bool = False,
+        enroll_update_weights: bool = False,
+        relevance_factor: float = 4,  # Relevance factor as described in Reynolds paper
         responsibility_threshold: float = 0,  # If set, the weight of a particular Gaussian will at least be greater than this threshold. In the case the real weight is lower, the prior mean value will be used to estimate the current mean and variance.
-        init_seed: int = 5489,
         # scoring
         scoring_function: Callable = linear_scoring,
-        # n_threads=None,
+        # RNG
+        init_seed: int = 5489,
     ):
         """Initializes the local UBM-GMM tool chain.
 
@@ -88,10 +89,16 @@ class GMM(BioAlgorithm, BaseEstimator):
             Decides wether the means of the Gaussians are updated while training.
         update_variances
             Decides wether the variancess of the Gaussians are updated while training.
-        relevance_factor
-            Relevance factor as described in Reynolds paper.
         gmm_enroll_iterations
             Number of iterations for the MAP GMM used for enrollment.
+        enroll_update_weights
+            Decides wether the weights of the Gaussians are updated while enrolling.
+        enroll_update_means
+            Decides wether the means of the Gaussians are updated while enrolling.
+        enroll_update_variances
+            Decides wether the variancess of the Gaussians are updated while enrolling.
+        relevance_factor
+            Relevance factor as described in Reynolds paper.
         responsibility_threshold
             If set, the weight of a particular Gaussian will at least be greater than
             this threshold. In the case where the real weight is lower, the prior mean
@@ -101,9 +108,6 @@ class GMM(BioAlgorithm, BaseEstimator):
         scoring_function
             Function returning a score from a model, a UBM, and a probe.
         """
-
-        # call base class constructor and register that this tool performs projection
-        # super().__init__(score_reduction_operation=??)
 
         # copy parameters
         self.number_of_gaussians = number_of_gaussians
@@ -116,14 +120,14 @@ class GMM(BioAlgorithm, BaseEstimator):
         self.update_variances = update_variances
         self.relevance_factor = relevance_factor
         self.gmm_enroll_iterations = gmm_enroll_iterations
+        self.enroll_update_means = enroll_update_means
+        self.enroll_update_weights = enroll_update_weights
+        self.enroll_update_variances = enroll_update_variances
         self.init_seed = init_seed
-        self.rng = self.init_seed  # TODO verify if rng object needed
+        self.rng = self.init_seed
         self.responsibility_threshold = responsibility_threshold
 
-        def scoring_function_wrapped(*args, **kwargs):
-            return scoring_function(*args, **kwargs)
-
-        self.scoring_function = scoring_function_wrapped
+        self.scoring_function = scoring_function
 
         self.ubm = None
 
@@ -143,29 +147,26 @@ class GMM(BioAlgorithm, BaseEstimator):
                 % (self.ubm.shape[1], feature.shape[1])
             )
 
-    def save_ubm(self, ubm_file):
-        """Saves the projector to file"""
+    def save_model(self, ubm_file):
+        """Saves the projector to file."""
         # Saves the UBM to file
         logger.debug("Saving model to file '%s'", ubm_file)
 
-        hdf5 = (
-            ubm_file
-            if isinstance(ubm_file, HDF5File)
-            else HDF5File(ubm_file, "w")
-        )
+        hdf5 = ubm_file if isinstance(ubm_file, HDF5File) else HDF5File(ubm_file, "w")
         self.ubm.save(hdf5)
 
-    def load_ubm(self, ubm_file):
+    def load_model(self, ubm_file):
+        """Loads the projector from a file."""
         hdf5file = HDF5File(ubm_file, "r")
         logger.debug("Loading model from file '%s'", ubm_file)
-        # read UBM
+        # Read UBM
         self.ubm = GMMMachine.from_hdf5(hdf5file)
         self.ubm.variance_thresholds = self.variance_threshold
 
     def project(self, array):
         """Computes GMM statistics against a UBM, given a 2D array of feature vectors"""
         self._check_feature(array)
-        logger.warning(" .... Projecting %d feature vectors", array.shape[0])
+        logger.debug("Projecting %d feature vectors", array.shape[0])
         # Accumulates statistics
         gmm_stats = self.ubm.transform(array)
         gmm_stats.compute()
@@ -182,7 +183,11 @@ class GMM(BioAlgorithm, BaseEstimator):
         return feature.save(feature_file)
 
     def enroll(self, data):
-        """Enrolls a GMM using MAP adaptation, given a list of 2D np.ndarray's of feature vectors"""
+        """Enrolls a GMM using MAP adaptation given a reference's feature vectors
+
+        Returns a GMMMachine tweaked from the UBM with MAP
+        """
+
         [self._check_feature(feature) for feature in data]
         array = da.vstack(data)
         # Use the array to train a GMM and return it
@@ -197,23 +202,24 @@ class GMM(BioAlgorithm, BaseEstimator):
                 convergence_threshold=self.training_threshold,
                 max_fitting_steps=self.gmm_enroll_iterations,
                 random_state=self.rng,
-                update_means=True,
-                update_variances=True,  # TODO default?
-                update_weights=True,  # TODO default?
+                update_means=self.enroll_update_means,
+                update_variances=self.enroll_update_variances,
+                update_weights=self.enroll_update_weights,
             )
             gmm.variance_thresholds = self.variance_threshold
             gmm.fit(array)
         return gmm
 
     def read_biometric_reference(self, model_file):
-        """Reads the model, which is a GMM machine"""
+        """Reads an enrolled reference model, which is a MAP GMMMachine"""
         return GMMMachine.from_hdf5(HDF5File(model_file, "r"), ubm=self.ubm)
 
-    def write_biometric_reference(self, model, model_file):
-        """Write the features (GMM_Stats)"""
+    @classmethod
+    def write_biometric_reference(cls, model: GMMMachine, model_file):
+        """Write the enrolled reference (MAP GMMMachine)"""
         return model.save(model_file)
 
-    def score(self, biometric_reference: GMMMachine, data: GMMStats):
+    def score(self, biometric_reference: GMMMachine, probe):
         """Computes the score for the given model and the given probe.
 
         Uses the scoring function passed during initialization.
@@ -222,22 +228,24 @@ class GMM(BioAlgorithm, BaseEstimator):
         ----------
         biometric_reference:
             The model to score against.
-        data:
+        probe:
             The probe data to compare to the model.
         """
 
-        logger.debug(f"scoring {biometric_reference}, {data}")
-        assert isinstance(biometric_reference, GMMMachine)
-        stats = self.project(data)
+        logger.debug(f"scoring {biometric_reference}, {probe}")
+        if not isinstance(probe, GMMStats):
+            probe = self.project(
+                probe
+            )  # Projection is done here instead of transform (or it would be applied to enrollment data too...)
         return self.scoring_function(
             models_means=[biometric_reference],
             ubm=self.ubm,
-            test_stats=stats,
+            test_stats=probe,
             frame_length_normalization=True,
         )[0, 0]
 
     def score_multiple_biometric_references(
-        self, biometric_references: "list[GMMMachine]", data: GMMStats
+        self, biometric_references: "list[GMMMachine]", probe: GMMStats
     ):
         """Computes the score between multiple models and one probe.
 
@@ -247,15 +255,15 @@ class GMM(BioAlgorithm, BaseEstimator):
         ----------
         biometric_references:
             The models to score against.
-        data:
+        probe:
             The probe data to compare to the models.
         """
 
-        logger.debug(f"scoring {biometric_references}, {data}")
+        logger.debug(f"scoring {biometric_references}, {probe}")
         assert isinstance(biometric_references[0], GMMMachine), type(
             biometric_references[0]
         )
-        stats = self.project(data)
+        stats = self.project(probe) if not isinstance(probe, GMMStats) else probe
         return self.scoring_function(
             models_means=biometric_references,
             ubm=self.ubm,
@@ -267,15 +275,15 @@ class GMM(BioAlgorithm, BaseEstimator):
         """This function computes the score between the given model and several given probe files."""
         logger.debug(f"scoring {model}, {probes}")
         assert isinstance(model, GMMMachine)
-        stats = []
-        for probe in probes:
-            stats.append(self.project(probe))
-        #    logger.warn("Please verify that this function is correct")
+        stats = [
+            self.project(probe) if not isinstance(probe, GMMStats) else probe
+            for probe in probes
+        ]
         return (
             self.scoring_function(
                 models_means=model.means,
                 ubm=self.ubm,
-                test_stats=probes,
+                test_stats=stats,
                 frame_length_normalization=True,
             )
             .mean()
@@ -284,50 +292,35 @@ class GMM(BioAlgorithm, BaseEstimator):
 
     def fit(self, X, y=None, **kwargs):
         """Trains the UBM."""
-        ubm_filename = "UBM_mobio_001.hdf5"  # Manually set "projector" file TODO remove
-        if not os.path.exists(ubm_filename):
+        # Stack all the samples in a 2D array of features
+        array = da.vstack(X).persist()
 
-            # Stack all the samples in a 2D array of features
-            array = np.vstack(X).persist()
+        logger.debug("UBM with %d feature vectors", array.shape[0])
 
-            logger.debug("UBM with %d feature vectors", array.shape[0])
+        logger.debug(f"Creating UBM machine with {self.number_of_gaussians} gaussians")
 
-            logger.debug(f"Creating UBM machine with {self.number_of_gaussians} gaussians")
-
-            self.ubm = GMMMachine(
-                n_gaussians=self.number_of_gaussians,
-                trainer="ml",
-                max_fitting_steps=self.ubm_training_iterations,
+        self.ubm = GMMMachine(
+            n_gaussians=self.number_of_gaussians,
+            trainer="ml",
+            max_fitting_steps=self.ubm_training_iterations,
+            convergence_threshold=self.training_threshold,
+            update_means=self.update_means,
+            update_variances=self.update_variances,
+            update_weights=self.update_weights,
+            k_means_trainer=KMeansMachine(
+                self.number_of_gaussians,
                 convergence_threshold=self.training_threshold,
-                update_means=self.update_means,
-                update_variances=self.update_variances,
-                update_weights=self.update_weights,
-                k_means_trainer=KMeansMachine(
-                    self.number_of_gaussians,
-                    convergence_threshold=self.training_threshold,  # TODO Have a separate threshold for kmeans instead of re-using the one for GMM...
-                    max_iter=self.kmeans_training_iterations,  # TODO pass this param through GMMMachine instead of the full KMeansMachine?
-                    init_method="k-means||",
-                    init_max_iter=5,
-                )
-                # TODO more params?
-            )
+                max_iter=self.kmeans_training_iterations,
+                init_method="k-means||",
+                init_max_iter=5,
+            ),
+        )
 
-            # Trains the GMM
-            logger.info("Training UBM GMM")
-            # Resetting the pseudo random number generator so we can have the same initialization for serial and parallel execution.
-            # self.rng = bob.core.random.mt19937(self.init_seed)
+        # Train the GMM
+        logger.info("Training UBM GMM")
 
-            self.ubm = self.ubm.fit(array)
+        self.ubm.fit(array, ubm_train=True)
 
-            logger.warning(f"Saving trained ubm to {ubm_filename}")
-            self.save_ubm(ubm_filename)
-
-            if not np.all(self.ubm.weights):
-                logger.error("zero weights after gmm training")
-                raise ValueError("!! zero weights after gmm training...")
-        else:
-            logger.warning(f"Loading trained ubm from {ubm_filename}")
-            self.load_ubm(ubm_filename)
         return self
 
     def transform(self, X, **kwargs):
