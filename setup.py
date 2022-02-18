@@ -98,17 +98,9 @@ setup(
         "console_scripts": [],
         "bob.bio.database": [],
         "bob.bio.preprocessor": [],
-        "bob.bio.extractor": [
-            "dummy2d           = bob.bio.gmm.test.dummy.extractor:extractor",  # for test purposes only
-        ],
+        "bob.bio.extractor": [],
         "bob.bio.algorithm": [
             "gmm                            = bob.bio.gmm.config.algorithm.gmm:algorithm",
-            "gmm-regular               = bob.bio.gmm.config.algorithm.gmm_regular:algorithm",
-            "jfa                                = bob.bio.gmm.config.algorithm.jfa:algorithm",
-            "isv                                = bob.bio.gmm.config.algorithm.isv:algorithm",
-            "ivector-cosine             = bob.bio.gmm.config.algorithm.ivector_cosine:algorithm",
-            "ivector-plda                = bob.bio.gmm.config.algorithm.ivector_plda:algorithm",
-            "ivector-lda-wccn-plda = bob.bio.gmm.config.algorithm.ivector_lda_wccn_plda:algorithm",
         ],
     },
     # Classifiers are important if you plan to distribute this package through
