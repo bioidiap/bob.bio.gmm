@@ -28,8 +28,8 @@ import bob.bio.gmm
 
 from bob.bio.base.test import utils
 from bob.bio.gmm.algorithm import GMM
-from bob.learn.em import GMMMachine
-from bob.learn.em import GMMStats
+from bob.learn.em.mixture.gmm import GMMMachine
+from bob.learn.em.mixture.gmm import GMMStats
 
 logger = logging.getLogger(__name__)
 
@@ -155,7 +155,7 @@ def test_score():
     )
     probe_data = utils.random_array((20, 45), -5.0, 5.0, seed=seed_value)
 
-    reference_score = 0.707260
+    reference_score = 0.601025
 
     numpy.testing.assert_almost_equal(
         gmm1.score(biometric_reference, probe), reference_score, decimal=5
