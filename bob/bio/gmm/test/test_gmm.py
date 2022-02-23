@@ -33,7 +33,7 @@ from bob.learn.em.mixture.gmm import GMMStats
 
 logger = logging.getLogger(__name__)
 
-regenerate_refs = True
+regenerate_refs = False
 
 seed_value = 5489
 
