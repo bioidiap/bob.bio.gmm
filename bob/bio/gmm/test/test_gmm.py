@@ -28,8 +28,8 @@ import bob.bio.gmm
 
 from bob.bio.base.test import utils
 from bob.bio.gmm.algorithm import GMM
-from bob.learn.em.mixture import GMMMachine
-from bob.learn.em.mixture import GMMStats
+from bob.learn.em.mixture.gmm import GMMMachine
+from bob.learn.em.mixture.gmm import GMMStats
 
 logger = logging.getLogger(__name__)
 
@@ -57,8 +57,8 @@ def test_training():
     # Set a small training iteration count
     gmm1 = GMM(
         number_of_gaussians=2,
-        kmeans_training_iterations=1,
-        ubm_training_iterations=1,
+        kmeans_training_iterations=5,
+        ubm_training_iterations=5,
         init_seed=seed_value,
     )
     train_data = utils.random_training_set(
@@ -95,7 +95,7 @@ def test_projector():
     )
 
     # Generate and project random feature
-    feature = utils.random_array((20, 45), -5.0, 5.0, seed=84)
+    feature = utils.random_array((20, 45), -5.0, 5.0, seed=seed_value)
     projected = gmm1.project(feature)
     assert isinstance(projected, bob.learn.em.mixture.GMMStats)
 
@@ -120,7 +120,7 @@ def test_enroll():
     )
     gmm1.ubm = ubm
     # Enroll the biometric reference from random features
-    enroll = utils.random_training_set((20, 45), 5, -5.0, 5.0, seed=21)
+    enroll = utils.random_training_set((20, 45), 5, -5.0, 5.0, seed=seed_value)
     biometric_reference = gmm1.enroll(enroll)
     assert not biometric_reference.is_similar_to(biometric_reference.ubm)
     assert isinstance(biometric_reference, GMMMachine)
@@ -153,9 +153,9 @@ def test_score():
     probe = GMMStats.from_hdf5(
         pkg_resources.resource_filename("bob.bio.gmm.test", "data/gmm_projected.hdf5")
     )
-    probe_data = utils.random_array((20, 45), -5.0, 5.0, seed=84)
+    probe_data = utils.random_array((20, 45), -5.0, 5.0, seed=seed_value)
 
-    reference_score = -0.098980
+    reference_score = 0.601025
 
     numpy.testing.assert_almost_equal(
         gmm1.score(biometric_reference, probe), reference_score, decimal=5
