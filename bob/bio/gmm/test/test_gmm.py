@@ -28,8 +28,8 @@ import bob.bio.gmm
 
 from bob.bio.base.test import utils
 from bob.bio.gmm.algorithm import GMM
-from bob.learn.em.mixture.gmm import GMMMachine
-from bob.learn.em.mixture.gmm import GMMStats
+from bob.learn.em import GMMMachine
+from bob.learn.em import GMMStats
 
 logger = logging.getLogger(__name__)
 
@@ -97,7 +97,7 @@ def test_projector():
     # Generate and project random feature
     feature = utils.random_array((20, 45), -5.0, 5.0, seed=seed_value)
     projected = gmm1.project(feature)
-    assert isinstance(projected, bob.learn.em.mixture.GMMStats)
+    assert isinstance(projected, GMMStats)
 
     reference_file = pkg_resources.resource_filename(
         "bob.bio.gmm.test", "data/gmm_projected.hdf5"
@@ -137,8 +137,8 @@ def test_enroll():
 
     with tempfile.NamedTemporaryFile(prefix="bob_", suffix="_bioref.hdf5") as fd:
         temp_file = fd.name
-        gmm1.write_biometric_reference(biometric_reference, reference_file)
-        assert os.path.exists(temp_file)
+        gmm1.write_biometric_reference(biometric_reference, temp_file)
+        assert GMMMachine.from_hdf5(temp_file, ubm).is_similar_to(gmm2)
 
 
 def test_score():
