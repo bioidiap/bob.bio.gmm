@@ -4,7 +4,6 @@ bob.blitz
 bob.core
 bob.io.base
 bob.math
-bob.learn.linear
 bob.sp
 bob.learn.em
 bob.measure
