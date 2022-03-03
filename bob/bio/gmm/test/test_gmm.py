@@ -160,16 +160,10 @@ def test_score():
         gmm1.score(biometric_reference, probe), reference_score, decimal=5
     )
 
-    multi_probes = gmm1.score_for_multiple_probes(
-        biometric_reference, [probe, probe, probe]
-    )
-    assert multi_probes.shape == (3,), multi_probes.shape
-    numpy.testing.assert_almost_equal(multi_probes, reference_score, decimal=5)
-
     multi_refs = gmm1.score_multiple_biometric_references(
         [biometric_reference, biometric_reference, biometric_reference], probe
     )
-    assert multi_refs.shape == (3,), multi_refs.shape
+    assert multi_refs.shape == (3, 1), multi_refs.shape
     numpy.testing.assert_almost_equal(multi_refs, reference_score, decimal=5)
 
     # With not projected data
