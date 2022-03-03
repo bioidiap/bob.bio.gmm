@@ -59,6 +59,7 @@ def test_training():
         kmeans_training_iterations=5,
         ubm_training_iterations=5,
         init_seed=seed_value,
+        kmeans_oversampling_factor=2,
     )
     train_data = utils.random_training_set(
         (100, 45), count=5, minimum=-5.0, maximum=5.0
