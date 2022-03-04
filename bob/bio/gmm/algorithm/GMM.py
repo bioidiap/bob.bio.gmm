@@ -302,6 +302,7 @@ class GMM(BioAlgorithm, BaseEstimator):
                 init_method="k-means||",
                 init_max_iter=self.kmeans_init_iterations,
                 random_state=self.init_seed,
+                oversampling_factor=self.kmeans_oversampling_factor,
             ),
         )
 
