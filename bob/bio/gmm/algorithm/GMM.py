@@ -284,7 +284,7 @@ class GMM(BioAlgorithm, BaseEstimator):
         if isinstance(array, da.Array):
             array = array.persist()
 
-        logger.debug("UBM with %d feature vectors", array.shape[0])
+        logger.debug("UBM with %d feature vectors", len(array))
 
         logger.debug(f"Creating UBM machine with {self.number_of_gaussians} gaussians")
 
