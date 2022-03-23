@@ -64,6 +64,7 @@ def test_training():
     train_data = utils.random_training_set(
         (100, 45), count=5, minimum=-5.0, maximum=5.0
     )
+    train_data = numpy.vstack(train_data)
 
     # Train the UBM (projector)
     gmm1.fit(train_data)
@@ -155,7 +156,7 @@ def test_score():
     )
     probe_data = utils.random_array((20, 45), -5.0, 5.0, seed=seed_value)
 
-    reference_score = 0.601025
+    reference_score = 0.6509
 
     numpy.testing.assert_almost_equal(
         gmm1.score(biometric_reference, probe), reference_score, decimal=5
