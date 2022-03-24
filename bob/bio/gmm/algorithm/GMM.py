@@ -13,8 +13,7 @@ This adds the notions of models, probes, enrollment, and scores to GMM.
 import copy
 import logging
 
-from typing import Callable
-from typing import Union
+from typing import Callable, Union
 
 import dask.array as da
 import numpy as np
@@ -23,10 +22,7 @@ from h5py import File as HDF5File
 from sklearn.base import BaseEstimator
 
 from bob.bio.base.pipelines.vanilla_biometrics import BioAlgorithm
-from bob.learn.em import GMMMachine
-from bob.learn.em import GMMStats
-from bob.learn.em import KMeansMachine
-from bob.learn.em import linear_scoring
+from bob.learn.em import GMMMachine, GMMStats, KMeansMachine, linear_scoring
 
 logger = logging.getLogger(__name__)
 
@@ -153,7 +149,9 @@ class GMM(BioAlgorithm, BaseEstimator):
             or feature.ndim != 2
             or feature.dtype != np.float64
         ):
-            raise ValueError(f"The given feature is not appropriate: \n{feature}")
+            raise ValueError(
+                f"The given feature is not appropriate: \n{feature}"
+            )
         if self.ubm is not None and feature.shape[1] != self.ubm.shape[1]:
             raise ValueError(
                 "The given feature is expected to have %d elements, but it has %d"
@@ -165,7 +163,11 @@ class GMM(BioAlgorithm, BaseEstimator):
         # Saves the UBM to file
         logger.debug("Saving model to file '%s'", ubm_file)
 
-        hdf5 = ubm_file if isinstance(ubm_file, HDF5File) else HDF5File(ubm_file, "w")
+        hdf5 = (
+            ubm_file
+            if isinstance(ubm_file, HDF5File)
+            else HDF5File(ubm_file, "w")
+        )
         self.ubm.save(hdf5)
 
     def load_model(self, ubm_file):
@@ -199,7 +201,10 @@ class GMM(BioAlgorithm, BaseEstimator):
         for feature in data:
             self._check_feature(feature)
 
-        data = np.vstack(data)
+        # if input is a list (or SampleBatch) of 2 dimensional arrays, stack them
+        if data[0].ndim == 2:
+            data = np.vstack(data)
+
         # Use the array to train a GMM and return it
         logger.info("Enrolling with %d feature vectors", data.shape[0])
 
@@ -270,7 +275,9 @@ class GMM(BioAlgorithm, BaseEstimator):
             The probe data to compare to the models.
         """
 
-        stats = self.project(probe) if not isinstance(probe, GMMStats) else probe
+        stats = (
+            self.project(probe) if not isinstance(probe, GMMStats) else probe
+        )
         return self.scoring_function(
             models_means=biometric_references,
             ubm=self.ubm,
@@ -284,9 +291,13 @@ class GMM(BioAlgorithm, BaseEstimator):
         if isinstance(array, da.Array):
             array = array.persist()
 
-        logger.debug("UBM with %d feature vectors", len(array))
+        # if input is a list (or SampleBatch) of 2 dimensional arrays, stack them
+        if array[0].ndim == 2:
+            array = np.vstack(array)
 
-        logger.debug(f"Creating UBM machine with {self.number_of_gaussians} gaussians")
+        logger.debug(
+            f"Creating UBM machine with {self.number_of_gaussians} gaussians and {len(array)} samples"
+        )
 
         self.ubm = GMMMachine(
             n_gaussians=self.number_of_gaussians,

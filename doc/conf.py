@@ -8,8 +8,7 @@ import pkg_resources
 import sphinx_rtd_theme
 
 # For inter-documentation mapping:
-from bob.extension.utils import link_documentation
-from bob.extension.utils import load_requirements
+from bob.extension.utils import link_documentation, load_requirements
 
 # -- General configuration -----------------------------------------------------
 
@@ -130,9 +129,7 @@ pygments_style = "sphinx"
 
 # Some variables which are useful for generated material
 project_variable = project.replace(".", "_")
-short_description = (
-    u"Tools for running biometric recognition experiments using GMM-based approximation"
-)
+short_description = u"Tools for running biometric recognition experiments using GMM-based approximation"
 owner = [u"Idiap Research Institute"]
 
 
