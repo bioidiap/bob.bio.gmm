@@ -199,7 +199,10 @@ class GMM(BioAlgorithm, BaseEstimator):
         for feature in data:
             self._check_feature(feature)
 
-        data = np.vstack(data)
+        # if input is a list (or SampleBatch) of 2 dimensional arrays, stack them
+        if data[0].ndim == 2:
+            data = np.vstack(data)
+
         # Use the array to train a GMM and return it
         logger.info("Enrolling with %d feature vectors", data.shape[0])
 
@@ -284,9 +287,11 @@ class GMM(BioAlgorithm, BaseEstimator):
         if isinstance(array, da.Array):
             array = array.persist()
 
-        logger.debug("UBM with %d feature vectors", len(array))
+        # if input is a list (or SampleBatch) of 2 dimensional arrays, stack them
+        if array[0].ndim == 2:
+            array = np.vstack(array)
 
-        logger.debug(f"Creating UBM machine with {self.number_of_gaussians} gaussians")
+        logger.debug(f"Creating UBM machine with {self.number_of_gaussians} gaussians and {len(array)} samples")
 
         self.ubm = GMMMachine(
             n_gaussians=self.number_of_gaussians,
