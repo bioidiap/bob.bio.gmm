@@ -27,8 +27,7 @@ import bob.bio.gmm
 
 from bob.bio.base.test import utils
 from bob.bio.gmm.algorithm import GMM
-from bob.learn.em import GMMMachine
-from bob.learn.em import GMMStats
+from bob.learn.em import GMMMachine, GMMStats
 
 logger = logging.getLogger(__name__)
 
@@ -44,7 +43,8 @@ def test_class():
     )
     assert isinstance(gmm1, GMM)
     assert isinstance(
-        gmm1, bob.bio.base.pipelines.vanilla_biometrics.abstract_classes.BioAlgorithm
+        gmm1,
+        bob.bio.base.pipelines.vanilla_biometrics.abstract_classes.BioAlgorithm,
     )
     assert gmm1.number_of_gaussians == 512
     assert "bob_fit_supports_dask_array" in gmm1._get_tags()
@@ -117,7 +117,9 @@ def test_enroll():
     )
     # Create a GMM object with that UBM
     gmm1 = GMM(
-        number_of_gaussians=2, enroll_update_means=True, enroll_update_variances=True
+        number_of_gaussians=2,
+        enroll_update_means=True,
+        enroll_update_variances=True,
     )
     gmm1.ubm = ubm
     # Enroll the biometric reference from random features
@@ -136,7 +138,9 @@ def test_enroll():
     gmm2 = gmm1.read_biometric_reference(reference_file)
     assert biometric_reference.is_similar_to(gmm2)
 
-    with tempfile.NamedTemporaryFile(prefix="bob_", suffix="_bioref.hdf5") as fd:
+    with tempfile.NamedTemporaryFile(
+        prefix="bob_", suffix="_bioref.hdf5"
+    ) as fd:
         temp_file = fd.name
         gmm1.write_biometric_reference(biometric_reference, temp_file)
         assert GMMMachine.from_hdf5(temp_file, ubm).is_similar_to(gmm2)
@@ -148,11 +152,15 @@ def test_score():
         pkg_resources.resource_filename("bob.bio.gmm.test", "data/gmm_ubm.hdf5")
     )
     biometric_reference = GMMMachine.from_hdf5(
-        pkg_resources.resource_filename("bob.bio.gmm.test", "data/gmm_enrolled.hdf5"),
+        pkg_resources.resource_filename(
+            "bob.bio.gmm.test", "data/gmm_enrolled.hdf5"
+        ),
         ubm=gmm1.ubm,
     )
     probe = GMMStats.from_hdf5(
-        pkg_resources.resource_filename("bob.bio.gmm.test", "data/gmm_projected.hdf5")
+        pkg_resources.resource_filename(
+            "bob.bio.gmm.test", "data/gmm_projected.hdf5"
+        )
     )
     probe_data = utils.random_array((20, 45), -5.0, 5.0, seed=seed_value)
 
