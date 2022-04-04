@@ -44,7 +44,7 @@ def test_class():
     assert isinstance(gmm1, GMM)
     assert isinstance(
         gmm1,
-        bob.bio.base.pipelines.vanilla_biometrics.abstract_classes.BioAlgorithm,
+        bob.bio.base.pipelines.BioAlgorithm,
     )
     assert gmm1.number_of_gaussians == 512
     assert "bob_fit_supports_dask_array" in gmm1._get_tags()

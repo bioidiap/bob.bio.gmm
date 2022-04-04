@@ -21,7 +21,7 @@ import numpy as np
 from h5py import File as HDF5File
 from sklearn.base import BaseEstimator
 
-from bob.bio.base.pipelines.vanilla_biometrics import BioAlgorithm
+from bob.bio.base.pipelines import BioAlgorithm
 from bob.learn.em import GMMMachine, GMMStats, KMeansMachine, linear_scoring
 
 logger = logging.getLogger(__name__)
@@ -111,6 +111,7 @@ class GMM(BioAlgorithm, BaseEstimator):
         scoring_function
             Function returning a score from a model, a UBM, and a probe.
         """
+        super().__init__(**kwargs)
 
         # Copy parameters
         self.number_of_gaussians = number_of_gaussians
@@ -139,8 +140,6 @@ class GMM(BioAlgorithm, BaseEstimator):
         self.scoring_function = scoring_function
 
         self.ubm = None
-
-        super().__init__(**kwargs)
 
     def _check_feature(self, feature):
         """Checks that the features are appropriate"""

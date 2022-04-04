@@ -77,9 +77,9 @@ source_suffix = ".rst"
 master_doc = "index"
 
 # General information about the project.
-project = u"bob.bio.gmm"
+project = "bob.bio.gmm"
 
-copyright = u"%s, Idiap Research Institute" % time.strftime("%Y")
+copyright = "%s, Idiap Research Institute" % time.strftime("%Y")
 
 # Grab the setup entry
 distribution = pkg_resources.require(project)[0]
@@ -129,8 +129,8 @@ pygments_style = "sphinx"
 
 # Some variables which are useful for generated material
 project_variable = project.replace(".", "_")
-short_description = u"Tools for running biometric recognition experiments using GMM-based approximation"
-owner = [u"Idiap Research Institute"]
+short_description = "Tools for running biometric recognition experiments using GMM-based approximation"
+owner = ["Idiap Research Institute"]
 
 
 # -- Options for HTML output ---------------------------------------------------
@@ -210,7 +210,7 @@ html_favicon = "img/favicon.ico"
 # html_file_suffix = None
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = project_variable + u"_doc"
+htmlhelp_basename = project_variable + "_doc"
 
 
 # -- Post configuration --------------------------------------------------------
