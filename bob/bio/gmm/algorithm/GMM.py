@@ -21,7 +21,7 @@ import numpy as np
 from h5py import File as HDF5File
 from sklearn.base import BaseEstimator
 
-from bob.bio.base.pipelines.vanilla_biometrics import BioAlgorithm
+from bob.bio.base.pipelines import BioAlgorithm
 from bob.learn.em import GMMMachine, GMMStats, KMeansMachine, linear_scoring
 
 logger = logging.getLogger(__name__)
