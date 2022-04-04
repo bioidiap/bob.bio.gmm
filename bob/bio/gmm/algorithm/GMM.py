@@ -111,6 +111,7 @@ class GMM(BioAlgorithm, BaseEstimator):
         scoring_function
             Function returning a score from a model, a UBM, and a probe.
         """
+        super().__init__(**kwargs)
 
         # Copy parameters
         self.number_of_gaussians = number_of_gaussians
@@ -140,7 +141,6 @@ class GMM(BioAlgorithm, BaseEstimator):
 
         self.ubm = None
 
-        super().__init__(**kwargs)
 
     def _check_feature(self, feature):
         """Checks that the features are appropriate"""
