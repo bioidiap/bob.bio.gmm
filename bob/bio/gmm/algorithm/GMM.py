@@ -141,7 +141,6 @@ class GMM(BioAlgorithm, BaseEstimator):
 
         self.ubm = None
 
-
     def _check_feature(self, feature):
         """Checks that the features are appropriate"""
         if (
